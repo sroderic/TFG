@@ -44,10 +44,15 @@ model = UNet(in_channels=3, num_classes=NUM_CLASSES, padding=0).to(DEVICE)
 criterion = nn.CrossEntropyLoss()
 optimizer = Adam(model.parameters(), lr=LEARNING_RATE)
 
+# Guardem el millor model
+best_val_loss = float('inf')
+model_dir = Path("checkpoints")
+model_dir.mkdir(exist_ok=True)
+
 # Entrenament
 for epoch in range(NUM_EPOCHS):
 	model.train()
-	running_loss = 0.0
+	train_loss = 0.0
 
 	for images, masks in tqdm(train_loader, desc="Training", leave=False):
 
@@ -61,9 +66,9 @@ for epoch in range(NUM_EPOCHS):
 		loss.backward()
 		optimizer.step()
 
-		running_loss += loss.item() * images.size(0)
+		train_loss += loss.item() * images.size(0)
 
-	epoch_loss = running_loss / len(train_loader.dataset)
+	avg_train_loss = train_loss / len(train_loader.dataset)
 	# VALIDACIÓ
 	model.eval()
 	val_loss = 0.0
@@ -79,7 +84,7 @@ for epoch in range(NUM_EPOCHS):
 	avg_val_loss = val_loss / len(val_loader.dataset)
 
 	print(f"📘 Epoch [{epoch+1}/{NUM_EPOCHS}]")
-	print(f"   🟢 Train Loss: {epoch_loss:.4f}")
+	print(f"   🟢 Train Loss: {avg_train_loss:.4f}")
 	print(f"   🔵 Val   Loss: {avg_val_loss:.4f}")
 
 	# Guardem si és el millor

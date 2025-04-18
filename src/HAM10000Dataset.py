@@ -1,6 +1,7 @@
 import torch
 from torch.utils.data.dataset import Dataset
 from PIL import Image
+from tqdm import tqdm
 
 class HAM10000Dataset(Dataset):
 	def __init__(self, df, images_folder, masks_folder, image_transform=None, mask_transform=None):
@@ -9,24 +10,44 @@ class HAM10000Dataset(Dataset):
 		self.masks_folder = masks_folder
 		self.image_transform = image_transform
 		self.mask_transform = mask_transform
+		self.preload = True
 
+		if self.preload:
+			self.images = []
+			self.masks = []
+			for _, row in tqdm(df.iterrows(), total=len(df), desc="Preloading dataset"):
+				image_id = row['image_id']
+				image = Image.open(images_folder / f"{image_id}.jpg")
+				mask = Image.open(masks_folder / f"{image_id}.png")
+
+				if self.image_transform:
+					image = self.image_transform(image)
+				if self.mask_transform:
+					mask = self.mask_transform(mask)
+
+				self.images.append(image)
+				self.masks.append(mask)
+		
 	def __len__(self):
 		return len(self.df)		
 	
 	def __getitem__(self, idx):
-		row = self.df.iloc[idx]
-		image_id = row['image_id']
+		if self.preload:
+			return self.images[idx], self.masks[idx]
+		else:
+			row = self.df.iloc[idx]
+			image_id = row['image_id']
 
-		image_path = self.images_folder / f"{image_id}.jpg"
-		mask_path = self.masks_folder / f"{image_id}.png"
+			image_path = self.images_folder / f"{image_id}.jpg"
+			mask_path = self.masks_folder / f"{image_id}.png"
 
-		image = Image.open(image_path)
-		mask = Image.open(mask_path)
+			image = Image.open(image_path)
+			mask = Image.open(mask_path)
 
-		if self.image_transform:
-			image = self.image_transform(image)
-		if self.mask_transform:
-			mask = self.mask_transform(mask)
+			if self.image_transform:
+				image = self.image_transform(image)
+			if self.mask_transform:
+				mask = self.mask_transform(mask)
 
 		return image, mask
 
