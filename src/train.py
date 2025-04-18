@@ -46,19 +46,15 @@ for epoch in range(NUM_EPOCHS):
 
 		images = images.to(DEVICE)
 		masks = masks.squeeze(1).long().to(DEVICE)  # (B, H, W)
-
-		print(images.shape)
-		print(masks.shape)
 		
-		# optimizer.zero_grad()
+		optimizer.zero_grad()
 		outputs = model(images)  # (B, C, H, W)
-		print(outputs.shape)
-		quit()
-		# loss = criterion(outputs, masks)
-		# loss.backward()
-		# optimizer.step()
 
-		# running_loss += loss.item() * images.size(0)
+		loss = criterion(outputs, masks)
+		loss.backward()
+		optimizer.step()
+
+		running_loss += loss.item() * images.size(0)
 
 	epoch_loss = running_loss / len(train_loader.dataset)
 	# VALIDACIÓ
