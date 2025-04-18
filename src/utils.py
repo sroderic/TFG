@@ -9,7 +9,8 @@ from torchvision import transforms
 # MASK_SIZE = IMAGE_SIZE
 IMAGE_SIZE = (428, 572)
 MASK_SIZE = (244, 388)
-PROJECT_FOLDER = Path.home() / 'Documents' / 'TFG'
+# PROJECT_FOLDER = Path.home() / 'Documents' / 'TFG'
+PROJECT_FOLDER = Path('/content/TFG')
 DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 data_folder = PROJECT_FOLDER / 'data'
