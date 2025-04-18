@@ -27,8 +27,16 @@ val_dataset = HAM10000Dataset(
 	mask_transform=utils.mask_transform
 )
 
-train_loader = DataLoader(train_dataset, batch_size=BATCH_SIZE, shuffle=True)
-val_loader = DataLoader(val_dataset, batch_size=BATCH_SIZE)
+train_loader = DataLoader(train_dataset,
+						  batch_size=BATCH_SIZE,
+						  shuffle=True,
+						  num_workers=4,
+						  pin_memory=True)
+val_loader = DataLoader(val_dataset,
+						 batch_size=BATCH_SIZE,
+						  shuffle=True,
+						  num_workers=4,
+						  pin_memory=True)
 
 # Inicialitzem model, pèrdua i optimitzador
 NUM_CLASSES = len(utils.class_to_int)
@@ -37,7 +45,6 @@ criterion = nn.CrossEntropyLoss()
 optimizer = Adam(model.parameters(), lr=LEARNING_RATE)
 
 # Entrenament
-print("Init")
 for epoch in range(NUM_EPOCHS):
 	model.train()
 	running_loss = 0.0
@@ -72,13 +79,13 @@ for epoch in range(NUM_EPOCHS):
 	avg_val_loss = val_loss / len(val_loader.dataset)
 
 	print(f"📘 Epoch [{epoch+1}/{NUM_EPOCHS}]")
-	print(f"   🟢 Train Loss: {avg_train_loss:.4f}")
+	print(f"   🟢 Train Loss: {epoch_loss:.4f}")
 	print(f"   🔵 Val   Loss: {avg_val_loss:.4f}")
 
 	# Guardem si és el millor
 	if avg_val_loss < best_val_loss:
 		best_val_loss = avg_val_loss
-		torch.save(model.state_dict(), model_dir / "best_model.pth")
+		# torch.save(model.state_dict(), model_dir / "best_model.pth")
 		print("💾 Millor model actualitzat!")
 
 print("🏁 Entrenament complet.")
