@@ -1,10 +1,9 @@
 from HAM10000Dataset import HAM10000Dataset
 from torch.utils.data import DataLoader
-from unet import UNet
+from unet2 import UNet
 from torch import nn
 from torch.optim import Adam
 from pathlib import Path
-import time
 from tqdm import tqdm
 import torch
 
@@ -46,6 +45,8 @@ def train(config):
 		num_classes=config.num_classes,
 		padding= 1 if config.padding else 0
 	).to(config.device)
+
+	# Loss function i optimitzador
 	criterion = nn.CrossEntropyLoss()
 	optimizer = Adam(model.parameters(), lr=config.lr)
 
@@ -56,19 +57,14 @@ def train(config):
 
 	# Entrenament
 	for epoch in range(config.epochs):
-		start_epoch = time.time()
-		loading_time = 0
-		start_load_time = start_epoch
 
 		model.train()
 		train_loss = 0.0
 
-		for images, masks in tqdm(train_loader, desc="Training", leave=False):
+		for images, masks in tqdm(train_loader, desc="Training"):
 
 			images = images.to(config.device)
 			masks = masks.squeeze(1).long().to(config.device)  # (B, H, W)
-			end_load_time = time.time() - start_load_time
-			loading_time += end_load_time
 			optimizer.zero_grad()
 			outputs = model(images)  # (B, C, H, W)
 
@@ -77,19 +73,14 @@ def train(config):
 			optimizer.step()
 
 			train_loss += loss.item() * images.size(0)
-			start_load_time = time.time()
 
 		avg_train_loss = train_loss / len(train_loader.dataset)
-		end_epoch = time.time() - start_epoch
-		print(f"Time total epoch: {end_epoch}")
-		print(f"Time loading dataset: {loading_time}")
-		print(f"Time training: {end_epoch - loading_time}")
 
 		# VALIDACIÓ
 		model.eval()
 		val_loss = 0.0
 		with torch.no_grad():
-			for images, masks in tqdm(val_loader, desc="Validation", leave=False):
+			for images, masks in tqdm(val_loader, desc="Validation"):
 				images = images.to(config.device)
 				masks = masks.squeeze(1).long().to(config.device)
 
