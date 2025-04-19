@@ -4,6 +4,7 @@ from torch import nn
 from torch.optim import Adam
 from pathlib import Path
 from tqdm import tqdm
+import time
 
 from HAM10000Dataset import HAM10000Dataset
 from unet import UNet
@@ -51,6 +52,10 @@ model_dir.mkdir(exist_ok=True)
 
 # Entrenament
 for epoch in range(NUM_EPOCHS):
+	start_epoch = time.time()
+	loading_time = 0
+	start_load_time = start_epoch
+
 	model.train()
 	train_loss = 0.0
 
@@ -58,7 +63,8 @@ for epoch in range(NUM_EPOCHS):
 
 		images = images.to(DEVICE)
 		masks = masks.squeeze(1).long().to(DEVICE)  # (B, H, W)
-		
+		end_load_time = time.time() - start_load_time
+		loading_time += end_load_time
 		optimizer.zero_grad()
 		outputs = model(images)  # (B, C, H, W)
 
@@ -67,8 +73,14 @@ for epoch in range(NUM_EPOCHS):
 		optimizer.step()
 
 		train_loss += loss.item() * images.size(0)
+		start_load_time = time.time()
 
 	avg_train_loss = train_loss / len(train_loader.dataset)
+	end_epoch = time.time() - start_epoch
+	print(f"Time total epoch: {end_epoch}")
+	print(f"Time loading dataset: {loading_time}")
+	print(f"Time training: {end_epoch - loading_time}")
+	exit()
 	# VALIDACIÓ
 	model.eval()
 	val_loss = 0.0
