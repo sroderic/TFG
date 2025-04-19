@@ -2,7 +2,6 @@ import torch
 import torch.nn as nn
 
 from unet_parts import DoubleConv, DownSample, UpSample
-from torchinfo import summary
 
 
 class UNet(nn.Module):
@@ -38,7 +37,8 @@ class UNet(nn.Module):
 		out = self.out(up_4)
 
 		return out
-	
+
+from torchinfo import summary	
 if __name__ == "__main__":
 	# double_conv = DoubleConv(256, 256, 0)
 	# print(double_conv)
@@ -46,6 +46,6 @@ if __name__ == "__main__":
 	model = UNet(3, 10, 0)
 	summary(model, input_size=(1, 3, 428, 572))
 
-	model = UNet(3, 10, 1)
-	summary(model, input_size=(1, 3, 608, 448))
-	summary(model, input_size=(1, 3, 416, 560))
+	# model = UNet(3, 10, 1)
+	# summary(model, input_size=(1, 3, 608, 448))
+	# summary(model, input_size=(1, 3, 416, 560))
