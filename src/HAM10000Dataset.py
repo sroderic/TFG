@@ -15,9 +15,6 @@ class HAM10000Dataset(Dataset):
 		self.mask_size = image_size if padding else tuple(x - 184 for x in image_size)
 		self.preload = preload
 
-		print(self.image_size)
-		print(self.mask_size)
-
 		self.image_transform = transforms.Compose([
 			transforms.Resize(self.image_size),
 			transforms.ToTensor(),
@@ -37,7 +34,6 @@ class HAM10000Dataset(Dataset):
 				torch.save(image, self.images_tensors_folder / f"{image_id}.pt")
 				torch.save(mask, self.masks_tensors_folder / f"{image_id}.pt")
 
-			exit()
 		
 	def __len__(self):
 		return len(self.df)		
