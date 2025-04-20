@@ -121,6 +121,8 @@ class UNet(nn.Module):
 			x1 = x1[:, :, crop:-crop, crop:-crop]
 		x = self.double_convolution_up_1(torch.cat([x1, x], dim=1))
 
+		return self.out(x)
+
 
 from torchinfo import summary
 if __name__ == "__main__":
