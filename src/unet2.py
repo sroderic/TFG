@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+from torchvision import transforms
 
 class UNet(nn.Module):
 	def __init__(self, in_channels, num_classes, padding):
@@ -100,6 +101,7 @@ class UNet(nn.Module):
 		if self.padding == 0:
 			crop = (x4.shape[2] - x.shape[2]) // 2
 			x4 = x4[:, :, crop:-crop, crop:-crop]
+			# x4 = self.center_crop(x4, x)
 		x = self.double_convolution_up_4(torch.cat([x4, x], dim=1))
 
 		
@@ -107,31 +109,41 @@ class UNet(nn.Module):
 		if self.padding == 0:
 			crop = (x3.shape[2] - x.shape[2]) // 2
 			x3 = x3[:, :, crop:-crop, crop:-crop]
+			# x3 = self.center_crop(x3, x)
 		x = self.double_convolution_up_3(torch.cat([x3, x], dim=1))
 
 		x = self.up_conv_2(x)
 		if self.padding == 0:
 			crop = (x2.shape[2] - x.shape[2]) // 2
 			x2 = x2[:, :, crop:-crop, crop:-crop]
+			# x2 = self.center_crop(x2, x)
 		x = self.double_convolution_up_2(torch.cat([x2, x], dim=1))
 
 		x = self.up_conv_1(x)
 		if self.padding == 0:
 			crop = (x1.shape[2] - x.shape[2]) // 2
 			x1 = x1[:, :, crop:-crop, crop:-crop]
+			# x1 = self.center_crop(x1, x)
 		x = self.double_convolution_up_1(torch.cat([x1, x], dim=1))
 
 		return self.out(x)
 
+	# def center_crop(self, tensor, target_tensor):
+	# 	_, _, h, w = target_tensor.shape
+	# 	transform = transforms.CenterCrop((h, w))
+	# 	return transform(tensor)
+
 
 from torchinfo import summary
+import time
 if __name__ == "__main__":
 	# double_conv = DoubleConv(256, 256, 0)
 	# print(double_conv)
 
+	start = time.time()
 	model = UNet(3, 10, 0)
 	summary(model, input_size=(1, 3, 428, 572))
-
+	print(time.time()-start)
 	# model = UNet(3, 10, 1)
 	# summary(model, input_size=(1, 3, 608, 448))
 	# summary(model, input_size=(1, 3, 416, 560))

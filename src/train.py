@@ -64,7 +64,11 @@ def train(config):
 		for images, masks in tqdm(train_loader, desc="Training"):
 
 			images = images.to(config.device)
-			masks = masks.squeeze(1).long().to(config.device)  # (B, H, W)
+			masks = masks.long().to(config.device)  # (B, H, W)
+			print("In train")
+			print(masks.shape)
+			print(masks.dtype)
+			print(torch.unique(masks))
 			optimizer.zero_grad()
 			outputs = model(images)  # (B, C, H, W)
 
@@ -82,7 +86,7 @@ def train(config):
 		with torch.no_grad():
 			for images, masks in tqdm(val_loader, desc="Validation"):
 				images = images.to(config.device)
-				masks = masks.squeeze(1).long().to(config.device)
+				masks = masks.long().to(config.device)
 
 				outputs = model(images)
 				loss = criterion(outputs, masks)

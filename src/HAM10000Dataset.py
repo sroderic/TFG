@@ -9,8 +9,8 @@ class HAM10000Dataset(Dataset):
 		self.df = df
 		self.images_folder = data_folder / 'images'
 		self.masks_folder = data_folder / 'semantic_segmentations'
-		self.images_tensors_folder = data_folder / 'tensors' / 'images'
-		self.masks_tensors_folder = data_folder / 'tensors' / 'semantic_segmentations'
+		# self.images_tensors_folder = data_folder / 'tensors' / 'images'
+		# self.masks_tensors_folder = data_folder / 'tensors' / 'semantic_segmentations'
 		self.image_size = image_size
 		self.mask_size = image_size if padding else tuple(x - 184 for x in image_size)
 		self.preload = preload
@@ -27,31 +27,44 @@ class HAM10000Dataset(Dataset):
 			])
 		
 		if self.preload:	
-			for _, row in tqdm(df.iterrows(), total=len(df), desc="Preloading dataset"):
+			# for _, row in tqdm(df.iterrows(), total=len(df), desc="Preloading dataset"):
+			# 	image_id = row['image_id']
+			# 	image, mask = self.__transform__(image_id)
+				
+			# 	torch.save(image, self.images_tensors_folder / f"{image_id}.pt")
+			# 	torch.save(mask, self.masks_tensors_folder / f"{image_id}.pt")
+			images = []
+			masks = []
+			for _, row in tqdm(df.iterrows(), total=len(df), desc="Preloading dataset to memory"):
 				image_id = row['image_id']
 				image, mask = self.__transform__(image_id)
-				
-				torch.save(image, self.images_tensors_folder / f"{image_id}.pt")
-				torch.save(mask, self.masks_tensors_folder / f"{image_id}.pt")
+				images.append(image)
+				masks.append(mask)  # shape: (H, W) instead of (1, H, W)
+			self.images = torch.stack(images)
+			self.masks = torch.stack(masks)
 
-		
 	def __len__(self):
 		return len(self.df)		
 	
 	def __getitem__(self, idx):
-		row = self.df.iloc[idx]
-		image_id = row['image_id']
+		# row = self.df.iloc[idx]
+		# image_id = row['image_id']
 
+		# if self.preload:
+		# 	image_path = self.images_tensors_folder / f"{image_id}.pt"
+		# 	mask_path = self.masks_tensors_folder / f"{image_id}.pt"
+		# 	image = torch.load(image_path, weights_only=False)
+		# 	mask = torch.load(mask_path, weights_only=False)
+
+		# else:
+		# 	image, mask = self.__transform__(image_id)
+
+		# return image, mask
 		if self.preload:
-			image_path = self.images_tensors_folder / f"{image_id}.pt"
-			mask_path = self.masks_tensors_folder / f"{image_id}.pt"
-			image = torch.load(image_path, weights_only=False)
-			mask = torch.load(mask_path, weights_only=False)
-
+			return self.images[idx], self.masks[idx]
 		else:
-			image, mask = self.__transform__(image_id)
-
-		return image, mask
+			image_id = self.df.iloc[idx]['image_id']
+			return self.__transform__(image_id)
 	
 	def __transform__(self, image_id):
 		image_path = self.images_folder / f"{image_id}.jpg"
@@ -59,8 +72,9 @@ class HAM10000Dataset(Dataset):
 		image = Image.open(image_path)
 		mask = Image.open(mask_path)
 		image = self.image_transform(image)
+		
 		mask = self.mask_transform(mask)
-		return image, mask
+		return image, mask.squeeze(0)
 
 
 
