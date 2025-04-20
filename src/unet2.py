@@ -47,7 +47,12 @@ class UNet(nn.Module):
 			nn.ReLU(inplace=True)
 		)
 
-		# convolution 3x3, ReLU (Downsampling)
+		self.up_conv_4 = nn.ConvTranspose2d(1024, 512, kernel_size=2, stride=2)  
+		self.up_conv_3 = nn.ConvTranspose2d(512, 256, kernel_size=2, stride=2)
+		self.up_conv_2 = nn.ConvTranspose2d(256, 128, kernel_size=2, stride=2)
+		self.up_conv_1 = nn.ConvTranspose2d(128, 64, kernel_size=2, stride=2)
+
+		# convolution 3x3, ReLU (Upsampling)
 		self.double_convolution_up_4 = nn.Sequential(
 			nn.Conv2d(1024, 512, kernel_size=3, padding=self.padding),
 			nn.ReLU(inplace=True),
@@ -79,70 +84,43 @@ class UNet(nn.Module):
 		self.out = nn.Conv2d(in_channels=64, out_channels=num_classes, kernel_size=1)
 
 
-	def __max_pool_1__(self, x):
-		self.convolution_1 = self.double_convolution_down_1(x)
-		return self.pool(self.convolution_1)
-	
-	def __max_pool_2__(self, x):
-		self.convolution_2 = self.double_convolution_down_2(x)
-		return self.pool(self.convolution_2)
-	
-	def __max_pool_3__(self, x):
-		self.convolution_3 = self.double_convolution_down_3(x)
-		return self.pool(self.convolution_3)
-	
-	def __max_pool_4__(self, x):
-		self.convolution_4 = self.double_convolution_down_4(x)
-		return self.pool(self.convolution_4)
-	
-	def __up_conv_4__(self, x):
-		up_conv = nn.ConvTranspose2d(1024, 512, kernel_size=2, stride=2)
-		if self.padding == 0:
-			crop = self.convolution_4.shape[2] // 2 - x.shape[2] 
-			self.convolution_4 = self.convolution_4[:, :, crop:-crop, crop:-crop]
-		return self.double_convolution_up_4(torch.cat([self.convolution_4, up_conv(x)], 1))
-
-	def __up_conv_3__(self, x):
-		up_conv = nn.ConvTranspose2d(512, 256, kernel_size=2, stride=2)
-		if self.padding == 0:
-			crop = self.convolution_3.shape[2] // 2 - x.shape[2]
-			self.convolution_3 = self.convolution_3[:, :, crop:-crop, crop:-crop]
-		return self.double_convolution_up_3(torch.cat([self.convolution_3, up_conv(x)], 1))
-
-	def __up_conv_2__(self, x):
-		up_conv = nn.ConvTranspose2d(256, 128, kernel_size=2, stride=2)
-		if self.padding == 0:
-			crop = self.convolution_2.shape[2] // 2 - x.shape[2]
-			self.convolution_2 = self.convolution_2[:, :, crop:-crop, crop:-crop]
-		return self.double_convolution_up_2(torch.cat([self.convolution_2, up_conv(x)], 1))
-
-	def __up_conv_1__(self, x):
-		up_conv = nn.ConvTranspose2d(128, 64, kernel_size=2, stride=2)
-		if self.padding == 0:
-			crop = self.convolution_1.shape[2] // 2 - x.shape[2]
-			self.convolution_1 = self.convolution_1[:, :, crop:-crop, crop:-crop]
-		return self.double_convolution_up_1(torch.cat([self.convolution_1, up_conv(x)], 1))
-
 	def forward(self, x):
-		return self.out(
-			self.__up_conv_1__(
-				self.__up_conv_2__(
-					self.__up_conv_3__(
-						self.__up_conv_4__(
-							self.bottle_neck(
-								self.__max_pool_4__(
-									self.__max_pool_3__(
-										self.__max_pool_2__(
-											self.__max_pool_1__(x)
-										)
-									)
-								)
-							)
-						)
-					)
-				)
-			)
-		)
+		# Encoder
+		x1 = self.double_convolution_down_1(x)
+		x2 = self.double_convolution_down_2(self.pool(x1))
+		x3 = self.double_convolution_down_3(self.pool(x2))
+		x4 = self.double_convolution_down_4(self.pool(x3))
+
+		
+		# Bottleneck
+		x = self.bottle_neck(self.pool(x4))
+		
+		# Decoder
+		x = self.up_conv_4(x)
+		if self.padding == 0:
+			crop = (x4.shape[2] - x.shape[2]) // 2
+			x4 = x4[:, :, crop:-crop, crop:-crop]
+		x = self.double_convolution_up_4(torch.cat([x4, x], dim=1))
+
+		
+		x = self.up_conv_3(x)
+		if self.padding == 0:
+			crop = (x3.shape[2] - x.shape[2]) // 2
+			x3 = x3[:, :, crop:-crop, crop:-crop]
+		x = self.double_convolution_up_3(torch.cat([x3, x], dim=1))
+
+		x = self.up_conv_2(x)
+		if self.padding == 0:
+			crop = (x2.shape[2] - x.shape[2]) // 2
+			x2 = x2[:, :, crop:-crop, crop:-crop]
+		x = self.double_convolution_up_2(torch.cat([x2, x], dim=1))
+
+		x = self.up_conv_1(x)
+		if self.padding == 0:
+			crop = (x1.shape[2] - x.shape[2]) // 2
+			x1 = x1[:, :, crop:-crop, crop:-crop]
+		x = self.double_convolution_up_1(torch.cat([x1, x], dim=1))
+
 
 from torchinfo import summary
 if __name__ == "__main__":
