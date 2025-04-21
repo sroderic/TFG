@@ -24,7 +24,6 @@ class HAM10000Dataset(Dataset):
 			])
 		
 	def __len__(self):
-		return(100)
 		return len(self.df)		
 	
 	def __getitem__(self, idx):

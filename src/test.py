@@ -3,18 +3,13 @@ import datetime
 from tqdm import tqdm
 import torch.nn as nn
 import torch.nn.functional as F
-# from sklearn import metrics
-# import numpy as np
 
 class DiceLoss(nn.Module):
 	def __init__(self, smooth = 1.0):
-		super(DiceLoss, self)
+		super(DiceLoss, self).__init__()
 		self.smooth = smooth
 
 	def forward(self, logits, targets):
-		return self.__dice_loss__(logits, targets)
-	
-	def __dice_loss__(self, logits, targets):
 		probs = F.softmax(logits, dim=1)  # [N, C, H, W]
 		num_classes = probs.shape[1]  # Number of classes (C)
 		
@@ -64,9 +59,9 @@ def dice_coeff(logits, targets, smooth=1.0, return_per_class=False):
 	else:
 		return dice_per_class.mean()  # scalar
 
-def train_one_epoch(epoch):
+def train_one_epoch(model, train_loader, criterion, optimizer, epoch):
 	running_loss = 0.
-	for images, masks in tqdm(train_loader, desc=f"Training (Epoch {epoch+1})"):
+	for images, masks in tqdm(train_loader, desc=f"Training:"):
 		images = images.to(device)
 		targets = masks.long().to(device)  # (B, H, W)
 		optimizer.zero_grad()
@@ -79,40 +74,38 @@ def train_one_epoch(epoch):
 
 	return running_loss / len(train_loader)
 
-def train_model(model, train_loader, val_loader, criterion, optimizer, epochs):
+def train_model(model, train_loader, val_loader, criterion, optimizer, epochs, checkpoints_folder, experiment):
 
 	# device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 	# Metrics per epoch
-	logger_train_loss = []
-	logger_validation_loss = []
-
-	logger_dice_coeff = []
+	
+	metrics = {
+		'train_loss': [],
+		'val_loss': [],
+		'dice_coeff': []
+	}
+	
 	
 	# To save the best model
 	best_val_loss = float('inf')
-	# TODO afegir ruta i crear carpetes
+	experiment_folder = checkpoints_folder / f'{experiment}'
+	experiment_folder.mkdir(exist_ok=True)
 
 	start_training = time.time()
 	for epoch in range(epochs):
-
+		print(f"📘 Epoch [{epoch+1}/{epochs}]")
 		# Training
-		# model.train()
-		# train_loss = train_one_epoch(epoch)
-		# logger_train_loss.append(train_loss)
-		train_loss = 10000
-		print(f"\tLoss: {train_loss:4f} -- Elapsed: {datetime.timedelta(seconds=time.time()-start_training)}")
-		print(f"Validation (Epoch {epoch+1})")
+		model.train()
+		avg_train_loss = train_one_epoch(model, train_loader, criterion, optimizer, epoch)
+		metrics['train_loss'].append(avg_train_loss)
+		print(f"   🟢 Train Loss: {avg_train_loss:.4f} -- Elapsed: {datetime.timedelta(seconds=time.time()-start_training)}")
 	
-		
-		# Validation
-		# TODO validation()
-				
-		start_validation = time.time()
-		validation_loss = 0.
+		# Validation	
+		val_loss = 0.
 		validation_dice = []
 		model = model.eval()
 		with torch.no_grad():
-			for images, masks in (val_loader):
+			for images, masks in tqdm(val_loader, desc=f"Validation:"):
 				images = images.to(device)
 				targets = masks.long().to(device)  # (B, H, W)
 		
@@ -120,57 +113,36 @@ def train_model(model, train_loader, val_loader, criterion, optimizer, epochs):
 				logits = model(images)  # (B, C, H, W)
 				loss = criterion(logits, targets)
 		
-				validation_loss += loss.item()
+				val_loss += loss.item()
 				dice_batch = dice_coeff(logits= logits, targets=targets) # [B, C]
 		
 				validation_dice.append(dice_batch)
-		validation_dice = torch.cat(validation_dice, dim =0)
-		average_validation_loss = validation_loss / len(val_loader)
-		average_dice =validation_dice.mean(dim=0).item()
 		
-		logger_validation_loss.append(average_validation_loss)
-		logger_dice_coeff.append(average_dice)
-		print(f'\tLoss: {average_validation_loss:4f} -- Time: {datetime.timedelta(seconds=time.time()-start_validation)}, Elapsed: {datetime.timedelta(seconds=time.time()-start_training)}')
-		print(f'\tDice Coefficient: {average_dice:4f}')
+		avg_val_loss = val_loss / len(val_loader)
+		
+		validation_dice = torch.cat(validation_dice, dim =0)
+		avg_dice_per_class =validation_dice.mean(dim=0)
+		avg_dice = avg_dice_per_class.mean().item()
+
+		metrics['val_loss'].append(avg_val_loss)
+		metrics['dice_coeff'].append(avg_dice)
+
+		print(f"   🔵 Val   Loss      : {avg_val_loss:.4f} -- Elapsed: {datetime.timedelta(seconds=time.time()-start_training)}")
+		print(f'   🔵 Dice Coefficient: {avg_dice:4f}')
 
 				
-		# TODO save best model()
-
-		# if (1 - average_validation_loss) > best_validation_loss:
-		# 	best_validation_loss = 1 - average_validation_loss
-		# 	best_model = {
-		# 		'epoch': epoch + 1,
-		# 		'model_state_dictionary': model.state_dict(),
-		# 		'fixed_threshold': fixed_threshold,
-		# 		'best_label_threshold': best_label_threshold,
-		# 	}
-		# 	best_model_probabilities = {
-		# 		'probabilities': probabilities,
-		# 		'ground_truths': ground_truths
-		# 	}
-		# 	best_model_file = config.experiment_path / 'best_model.pth'
-		# 	torch.save(best_model, best_model_file)
-		# 	print('Best validation loss!')
-		# 	best_model_probabilities_file = config.experiment_path / 'best_model_probabilities.pth'
-		# 	torch.save(best_model_probabilities, best_model_probabilities_file)
+		# Save best model
+		if avg_val_loss < best_val_loss:
+			best_val_loss = avg_val_loss
+			
+			best_model_file = experiment_folder / 'best_model.pth'
+			torch.save(model.state_dict(), best_model_file)
+			print("💾 Best model saved!")
 		print('........................................................................')
 
-		# epoch_checkpoint = {
-		# 		'epoch': epoch + 1,
-		# 		'batch_size': config.batch,
-		# 		'model_state_dictionary': model.state_dict(),
-		# 		'optimizer_state_dictionary': optimizer.state_dict(),
-		# 		'scheduler_state_dictionary': scheduler.state_dict(),
-		# 		'logger_train_loss': logger_train_loss,
-		# 		'logger_validation_loss': logger_validation_loss,
-		# 		'roc_auc_macros': roc_auc_macros,
-		# 		'pr_auc_macros': pr_auc_macros,
-		# 		'f1_macros': f1_macros,
-		# }
-		# # model_checkpoint_file = config.experiment_path / 'checkpoint'
-		# torch.save(epoch_checkpoint, model_checkpoint_file)
-		# epoch_checkpoint_file = config.experiment_path / f'epoch{epoch + 1:02d}'
-		# torch.save(epoch_checkpoint, epoch_checkpoint_file)
+	metrics_file = experiment_folder / 'metrics.pt'
+	torch.save(metrics, metrics_file)
+	print("🏁 Entrenament complet.")
 
 if __name__ == "__main__":
 	import argparse
@@ -296,5 +268,7 @@ if __name__ == "__main__":
 		val_loader= val_loader,
 		criterion= criterion,
 		optimizer= optimizer,
-		epochs=args.epochs
+		epochs=args.epochs,
+		checkpoints_folder= checkpoints_folder,
+		experiment=args.experiment
 	)
