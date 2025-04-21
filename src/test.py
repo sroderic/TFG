@@ -283,8 +283,8 @@ if __name__ == "__main__":
 		torch.save(model.state_dict(), base_model_path)
 
 	# Get Loss function and optimizer
-	criterion = nn.CrossEntropyLoss()
-	# criterion = DiceLoss()
+	# criterion = nn.CrossEntropyLoss()
+	criterion = DiceLoss()
 	optimizer = optim.Adam(model.parameters(), lr=args.lr)
 
 	# Scheduler
