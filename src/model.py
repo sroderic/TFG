@@ -11,30 +11,30 @@ class UNet(nn.Module):
 		# convolution 3x3, ReLU (Downsampling)
 		self.double_convolution_down_1 = nn.Sequential(
 			nn.Conv2d(in_channels, 64, kernel_size=3, padding=self.padding),
-			nn.ReLU(inplace=True),
+			nn.ReLU(),
 			nn.Conv2d(64, 64, kernel_size=3, padding=self.padding),
-			nn.ReLU(inplace=True)
+			nn.ReLU()
 		)
 
 		self.double_convolution_down_2 = nn.Sequential(
 			nn.Conv2d(64, 128, kernel_size=3, padding=self.padding),
-			nn.ReLU(inplace=True),
+			nn.ReLU(),
 			nn.Conv2d(128, 128, kernel_size=3, padding=self.padding),
-			nn.ReLU(inplace=True)
+			nn.ReLU()
 		)
 
 		self.double_convolution_down_3 = nn.Sequential(
 			nn.Conv2d(128, 256, kernel_size=3, padding=self.padding),
-			nn.ReLU(inplace=True),
+			nn.ReLU(),
 			nn.Conv2d(256, 256, kernel_size=3, padding=self.padding),
-			nn.ReLU(inplace=True)
+			nn.ReLU()
 		)
 
 		self.double_convolution_down_4 = nn.Sequential(
 			nn.Conv2d(256, 512, kernel_size=3, padding=self.padding),
-			nn.ReLU(inplace=True),
+			nn.ReLU(),
 			nn.Conv2d(512, 512, kernel_size=3, padding=self.padding),
-			nn.ReLU(inplace=True)
+			nn.ReLU()
 		)
 
 		# max pool 2x2
@@ -43,9 +43,9 @@ class UNet(nn.Module):
 		# bottle_neck (conv 3x3, ReLU)
 		self.bottle_neck = nn.Sequential(
 			nn.Conv2d(512, 1024, kernel_size=3, padding=self.padding),
-			nn.ReLU(inplace=True),
+			nn.ReLU(),
 			nn.Conv2d(1024, 1024, kernel_size=3, padding=self.padding),
-			nn.ReLU(inplace=True)
+			nn.ReLU()
 		)
 
 		self.up_conv_4 = nn.ConvTranspose2d(1024, 512, kernel_size=2, stride=2)  
@@ -56,30 +56,30 @@ class UNet(nn.Module):
 		# convolution 3x3, ReLU (Upsampling)
 		self.double_convolution_up_4 = nn.Sequential(
 			nn.Conv2d(1024, 512, kernel_size=3, padding=self.padding),
-			nn.ReLU(inplace=True),
+			nn.ReLU(),
 			nn.Conv2d(512, 512, kernel_size=3, padding=self.padding),
-			nn.ReLU(inplace=True)
+			nn.ReLU()
 		)
 
 		self.double_convolution_up_3 = nn.Sequential(
 			nn.Conv2d(512, 256, kernel_size=3, padding=self.padding),
-			nn.ReLU(inplace=True),
+			nn.ReLU(),
 			nn.Conv2d(256, 256, kernel_size=3, padding=self.padding),
-			nn.ReLU(inplace=True)
+			nn.ReLU()
 		)
 
 		self.double_convolution_up_2 = nn.Sequential(
 			nn.Conv2d(256, 128, kernel_size=3, padding=self.padding),
-			nn.ReLU(inplace=True),
+			nn.ReLU(),
 			nn.Conv2d(128, 128, kernel_size=3, padding=self.padding),
-			nn.ReLU(inplace=True)
+			nn.ReLU()
 		)
 		
 		self.double_convolution_up_1 = nn.Sequential(
 			nn.Conv2d(128, 64, kernel_size=3, padding=self.padding),
-			nn.ReLU(inplace=True),
+			nn.ReLU(),
 			nn.Conv2d(64, 64, kernel_size=3, padding=self.padding),
-			nn.ReLU(inplace=True)
+			nn.ReLU()
 		)
 
 		self.out = nn.Conv2d(in_channels=64, out_channels=num_classes, kernel_size=1)
