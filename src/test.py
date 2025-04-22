@@ -5,63 +5,62 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 class DiceLoss(nn.Module):
-	def __init__(self, smooth = 1.0):
+	def __init__(self, smooth = 0.0):
 		super(DiceLoss, self).__init__()
 		self.smooth = smooth
+		self.eps = 1e-7
 
-	def forward(self, logits, targets):
-		probs = F.softmax(logits, dim=1)  # [N, C, H, W]
-		num_classes = probs.shape[1]  # Number of classes (C)
+	def forward(self, y_pred, y_true):
+		y_pred = F.softmax(y_pred, dim=1)
+		bs = y_true.size(0) # batch size
+		num_classes = y_pred.size(1)  # Number of classes (C)
 		
-		targets = F.one_hot(targets, num_classes).permute(0, 3, 1, 2)  # [N,H,W] -> [N,H,W,C]
-		
-		intersection = (probs * targets).sum(dim=(2, 3))  # Element-wise multiplication [N,C]
-		union = probs.sum(dim=(2, 3)) + targets.sum(dim=(2, 3))  # Sum of all pixels [N,C]
-			
-		dice_score = (2. * intersection + self.smooth) / (union + self.smooth)  # [N, C]
-		return 1 - dice_score.mean()  # Average Dice Loss across classes
+		y_true = y_true.view(bs, -1) # [N, HxW]
+		y_pred = y_pred.view(bs, num_classes, -1) # [N, C, HxW]
 
-def dice_coeff(logits, targets, smooth=1.0, return_per_class=False):
-	"""
-	Calculates Dice coefficient per class for multi-class segmentation.
+		y_true = F.one_hot(y_true, num_classes)  # [N, HxW] -> [N,HxW, C]
+		y_true = y_true.permute(0, 2, 1)  #  [N,HxW, C] -> [N, C, H*W]
 
-	Args:
-		pred:		[N, C, H, W] logits (not softmaxed).
-		target:	  [N, H, W] ground truth class indices (ints from 0 to C-1).
-		num_classes: int, number of classes.
-		smooth:	  float, smoothing constant to avoid division by zero.
-		return_per_class: if True, return per-class Dice scores. Else, return mean Dice.
+		output = y_pred
+		target = y_true.type_as(y_pred)
 
-	Returns:
-		Dice score per class [C] or mean Dice (scalar)
-	"""
-	# Step 1: Convert logits to predicted probabilities
-	probs = F.softmax(logits, dim=1)  # [N, C, H, W]
-	num_classes = probs.shape[1]  # Number of classes (C)
+		intersection = torch.sum(output * target, dim=(0,2))
+		union = torch.sum(output + target, dim=(0,2))
+		dice_score = (2.0 * intersection + self.smooth) / (union + self.smooth).clamp_min(self.eps)
+		loss = 1.0 - dice_score
+		# mask = y_true.sum((0, 2)) > 0
+		# loss *= mask.to(loss.dtype)
+		return loss.mean()
 
-	# Step 2: Get predicted class index per pixel
-	pred_classes = torch.argmax(probs, dim=1)  # [N, H, W]
+def dice_coeff(y_pred, y_true, smooth=0.0, eps = 1e-7, return_per_class=False):
 
-	# Step 3: One-hot encode both pred and target
-	pred_onehot = F.one_hot(pred_classes, num_classes).permute(0, 3, 1, 2).float()   # [N, C, H, W]
-	targets_onehot = F.one_hot(targets, num_classes).permute(0, 3, 1, 2).float()	   # [N, C, H, W]
+	bs = y_true.size(0) # batch size
+	num_classes = y_pred.size(1)  # Number of classes (C)
+	
+	y_pred = F.softmax(y_pred, dim=1)  # [N, C, H, W] Probabilities
+	y_pred = torch.argmax(y_pred, dim=1) # [N, H, W] Predicted classes
 
-	# Step 4: Compute Dice per class
-	intersection = (pred_onehot * targets_onehot).sum(dim=(2, 3))  # [N, C]
-	union = pred_onehot.sum(dim=(0, 2, 3)) + targets_onehot.sum(dim=(2, 3))  # [N, C]
+	
+	y_true = y_true.view(bs, -1) # [N, HxW]
+	y_pred = y_pred.view(bs, -1) # [N, HxW]
+	
+	y_true = F.one_hot(y_true, num_classes)  # [N, HxW] -> [N,HxW, C]
+	y_true = y_true.permute(0, 2, 1)  #  [N,HxW, C] -> [N, C, H*W]
 
-	dice_per_image_per_class = (2 * intersection + smooth) / (union + smooth)  # [N, C]
-	return dice_per_image_per_class
-	dice_per_class = dice_per_image_per_class.mean(dim=0)
+	y_pred = F.one_hot(y_pred, num_classes)  # [N, HxW] -> [N,HxW, C]
+	y_pred = y_pred.permute(0, 2, 1)  #  [N,HxW, C] -> [N, C, H*W]
+	
+	output = y_pred
+	target = y_true
+	intersection = torch.sum(output * target, dim=(0,2))
+	union = torch.sum((output + target) > 0, dim=(0,2))
+	dice_score = (2 * intersection + smooth) / (union + smooth).clamp_min(eps)
 
-	if return_per_class:
-		return dice_per_class  # [C]
-	else:
-		return dice_per_class.mean()  # scalar
+	return dice_score.mean()
 
 def train_one_epoch(model, train_loader, criterion, optimizer, epoch):
 	running_loss = 0.
-	for images, masks in tqdm(train_loader, desc=f"Training:"):
+	for images, masks in tqdm(train_loader, desc=f"Training"):
 		images = images.to(device)
 		targets = masks.long().to(device)  # (B, H, W)
 		optimizer.zero_grad()
@@ -95,17 +94,17 @@ def train_model(model, train_loader, val_loader, criterion, optimizer, epochs, c
 	for epoch in range(epochs):
 		print(f"📘 Epoch [{epoch+1}/{epochs}]")
 		# Training
-		model.train()
-		avg_train_loss = train_one_epoch(model, train_loader, criterion, optimizer, epoch)
-		metrics['train_loss'].append(avg_train_loss)
-		print(f"   🟢 Train Loss: {avg_train_loss:.4f} -- Elapsed: {datetime.timedelta(seconds=time.time()-start_training)}")
+		# model.train()
+		# avg_train_loss = train_one_epoch(model, train_loader, criterion, optimizer, epoch)
+		# metrics['train_loss'].append(avg_train_loss)
+		# print(f"   🟢 Train Loss: {avg_train_loss:.4f} -- Elapsed: {datetime.timedelta(seconds=time.time()-start_training)}")
 	
 		# Validation	
 		val_loss = 0.
-		validation_dice = []
+		val_dice = 0.
 		model = model.eval()
 		with torch.no_grad():
-			for images, masks in tqdm(val_loader, desc=f"Validation:"):
+			for images, masks in tqdm(val_loader, desc=f"Validation"):
 				images = images.to(device)
 				targets = masks.long().to(device)  # (B, H, W)
 		
@@ -114,21 +113,17 @@ def train_model(model, train_loader, val_loader, criterion, optimizer, epochs, c
 				loss = criterion(logits, targets)
 		
 				val_loss += loss.item()
-				dice_batch = dice_coeff(logits= logits, targets=targets) # [B, C]
-		
-				validation_dice.append(dice_batch)
+				dice = dice_coeff(logits, targets) # [B, C]
+				val_dice += dice.item()
 		
 		avg_val_loss = val_loss / len(val_loader)
-		
-		validation_dice = torch.cat(validation_dice, dim =0)
-		avg_dice_per_class =validation_dice.mean(dim=0)
-		avg_dice = avg_dice_per_class.mean().item()
+		avg_val_dice = val_dice / len(val_loader)
 
 		metrics['val_loss'].append(avg_val_loss)
-		metrics['dice_coeff'].append(avg_dice)
+		metrics['dice_coeff'].append(avg_val_dice)
 
 		print(f"   🔵 Val   Loss      : {avg_val_loss:.4f} -- Elapsed: {datetime.timedelta(seconds=time.time()-start_training)}")
-		print(f'   🔵 Dice Coefficient: {avg_dice:4f}')
+		print(f'   🔵 Dice Coefficient: {avg_val_dice:4f}')
 
 				
 		# Save best model
@@ -157,6 +152,27 @@ if __name__ == "__main__":
 	from torch.utils.data import DataLoader
 	from torch import nn, optim
 	
+
+	import torch
+
+	# # Settings
+	# batch_size = 16
+	# num_classes = 3
+	# height = 450
+	# width = 600
+
+	# # Random logits (before softmax)
+	# pred = torch.randn(batch_size, num_classes, height, width)
+
+
+	# # Random ground truth labels (each pixel has a class index from 0 to 6)
+	# target = torch.randint(0, num_classes, (batch_size, height, width))
+	# print(DiceLoss().forward(pred, target))
+	# print(dice_coeff(pred, target))
+	
+	# exit()
+
+
 	parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
 	parser.add_argument('--colab', action='store_true')
