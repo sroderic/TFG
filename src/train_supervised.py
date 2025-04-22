@@ -94,10 +94,10 @@ def train_model(model, train_loader, val_loader, criterion, optimizer, epochs, c
 	for epoch in range(epochs):
 		print(f"📘 Epoch [{epoch+1}/{epochs}]")
 		# Training
-		# model.train()
-		# avg_train_loss = train_one_epoch(model, train_loader, criterion, optimizer, epoch)
-		# metrics['train_loss'].append(avg_train_loss)
-		# print(f"   🟢 Train Loss: {avg_train_loss:.4f} -- Elapsed: {datetime.timedelta(seconds=time.time()-start_training)}")
+		model.train()
+		avg_train_loss = train_one_epoch(model, train_loader, criterion, optimizer, epoch)
+		metrics['train_loss'].append(avg_train_loss)
+		print(f"   🟢 Train Loss: {avg_train_loss:.4f} -- Elapsed: {datetime.timedelta(seconds=time.time()-start_training)}")
 	
 		# Validation	
 		val_loss = 0.
@@ -271,8 +271,16 @@ if __name__ == "__main__":
 		torch.save(model.state_dict(), base_model_path)
 
 	# Get Loss function and optimizer
-	# criterion = nn.CrossEntropyLoss()
-	criterion = DiceLoss()
+	if args.loss == 'Cross':
+		criterion = nn.CrossEntropyLoss()
+	elif args.loss == 'Dice':
+		criterion = DiceLoss()
+	elif args.loss == 'Focal':
+		print('Still to develop, please come back soon!')
+		exit()
+	else:
+		print('Optionss: Cross, Dice, Focal')
+		exit()
 	optimizer = optim.Adam(model.parameters(), lr=args.lr)
 
 	# Scheduler
