@@ -1,3 +1,4 @@
+import torch
 from torchvision import transforms
 from torch.utils.data.dataset import Dataset
 from PIL import Image
