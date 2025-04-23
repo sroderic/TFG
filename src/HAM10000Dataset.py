@@ -5,12 +5,14 @@ from PIL import Image
 from tqdm import tqdm
 
 class HAM10000Dataset(Dataset):
-	def __init__(self, df, data_folder, image_size, padding):
+	def __init__(self, df, data_folder, image_size):
+	# def __init__(self, df, data_folder, image_size, padding):
 		self.df = df
 		self.images_folder = data_folder / 'images'
 		self.masks_folder = data_folder / 'semantic_segmentations'
 		self.image_size = image_size
-		self.mask_size = image_size if padding else tuple(x - 184 for x in image_size)
+		self.mask_size = image_size
+		# self.mask_size = image_size if padding else tuple(x - 184 for x in image_size)
 
 		self.image_transform = transforms.Compose([
 			transforms.Resize(self.image_size),

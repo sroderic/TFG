@@ -10,26 +10,26 @@ class DiceLoss(nn.Module):
 		self.smooth = smooth
 		self.eps = 1e-7
 
-	def forward(self, y_pred, y_true):
-		y_pred = F.softmax(y_pred, dim=1)
-		bs = y_true.size(0) # batch size
-		num_classes = y_pred.size(1)  # Number of classes (C)
+	def forward(self, logit, target):
+		prob = F.softmax(logit, dim=1)
+		batch_size = target.size(0) # batch size
+		num_classes = logit.size(1)  # Number of classes (C)
 		
-		y_true = y_true.view(bs, -1) # [N, HxW]
-		y_pred = y_pred.view(bs, num_classes, -1) # [N, C, HxW]
+		target = target.view(batch_size, -1) # [N, HxW]
+		prob = prob.view(batch_size, num_classes, -1) # [N, C, HxW]
 
-		y_true = F.one_hot(y_true, num_classes)  # [N, HxW] -> [N,HxW, C]
-		y_true = y_true.permute(0, 2, 1)  #  [N,HxW, C] -> [N, C, H*W]
+		target = F.one_hot(target, num_classes)  # [N, HxW] -> [N,HxW, C]
+		target = target.permute(0, 2, 1)  #  [N,HxW, C] -> [N, C, H*W]
 
-		output = y_pred
-		target = y_true.type_as(y_pred)
+		target = target.type_as(prob)
+		
+		intersection = torch.sum(prob * target, dim=(0,2))
+		sum_sets = torch.sum(prob + target, dim=(0,2))
 
-		intersection = torch.sum(output * target, dim=(0,2))
-		union = torch.sum(output + target, dim=(0,2))
-		dice_score = (2.0 * intersection + self.smooth) / (union + self.smooth).clamp_min(self.eps)
+		dice_score = (2.0 * intersection + self.smooth) / (sum_sets + self.smooth).clamp_min(self.eps)
 		loss = 1.0 - dice_score
-		# mask = y_true.sum((0, 2)) > 0
-		# loss *= mask.to(loss.dtype)
+		mask = target.sum((0, 2)) > 0
+		loss *= mask.to(loss.dtype)
 		return loss.mean()
 
 def dice_coeff(y_pred, y_true, smooth=0.0, eps = 1e-7, return_per_class=False):
@@ -61,6 +61,7 @@ def dice_coeff(y_pred, y_true, smooth=0.0, eps = 1e-7, return_per_class=False):
 def train_one_epoch(model, train_loader, criterion, optimizer, epoch):
 	running_loss = 0.
 	for images, masks in tqdm(train_loader, desc=f"Training"):
+
 		images = images.to(device)
 		targets = masks.long().to(device)  # (B, H, W)
 		optimizer.zero_grad()
@@ -177,8 +178,8 @@ if __name__ == "__main__":
 
 	parser.add_argument('--colab', action='store_true')
 	# parser.add_argument('--mode', type=str, required=True, help='train, test, inference')
-	parser.add_argument('--image_size', type=int, nargs=2, default=[428, 572], help='Input image size as two integers')
-	parser.add_argument('--padding', action='store_true')
+	# parser.add_argument('--image_size', type=int, nargs=2, default=[428, 572], help='Input image size as two integers')
+	# parser.add_argument('--padding', action='store_true')
 	parser.add_argument('--epochs', type=int, required=True)
 	parser.add_argument('--batch', type=int, required=True)
 	parser.add_argument('--lr', type=float, required=True)
@@ -215,18 +216,18 @@ if __name__ == "__main__":
 	class_to_int = dataset_info['class_to_int']
 
 	# Get datasets
-	image_size = tuple(args.image_size)
+	image_size = (448, 608)
 	train_dataset = HAM10000Dataset(
 		df_train,
 		data_folder,
 		image_size,
-		args.padding
+		# args.padding
 	)
 	val_dataset = HAM10000Dataset(
 		df_val,
 		data_folder,
 		image_size,
-		args.padding
+		# args.padding
 	)
 
 	# Get dataloaders
@@ -236,14 +237,14 @@ if __name__ == "__main__":
 		batch_size=args.batch,
 		shuffle=True,
 		num_workers=num_workers,
-		# pin_memory=True
+		pin_memory=True
 	)
 	val_loader = DataLoader(
 		val_dataset,
 		batch_size=args.batch,
 		shuffle=True,
 		num_workers=num_workers,
-		# pin_memory=True
+		pin_memory=True
 	)
 	
 	# Get model
@@ -254,7 +255,7 @@ if __name__ == "__main__":
 	model = UNet(
 			in_channels=in_channels,
 			num_classes=num_classes,
-			padding=1 if args.padding else 0
+			# padding=1 if args.padding else 0
 		).to(device)
 
 	base_model_path = checkpoints_folder / 'untrained_model.pth'

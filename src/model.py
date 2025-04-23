@@ -3,10 +3,11 @@ import torch.nn as nn
 from torchvision import transforms
 
 class UNet(nn.Module):
-	def __init__(self, in_channels, num_classes, padding):
+	def __init__(self, in_channels, num_classes):
+	# def __init__(self, in_channels, num_classes, padding):
 		super().__init__()
 		
-		self.padding =padding
+		self.padding =1
 
 		# convolution 3x3, ReLU (Downsampling)
 		self.double_convolution_down_1 = nn.Sequential(
@@ -133,8 +134,8 @@ if __name__ == "__main__":
 	# double_conv = DoubleConv(256, 256, 0)
 	# print(double_conv)
 
-	model = UNet(3, 10, 0)
-	summary(model, input_size=(1, 3, 428, 572))
-	# model = UNet(3, 10, 1)
-	# summary(model, input_size=(1, 3, 608, 448))
+	# model = UNet(3, 10, 0)
+	# summary(model, input_size=(1, 3, 428, 572))
+	model = UNet(3, 10)
+	summary(model, input_size=(1, 3, 608, 448))
 	# summary(model, input_size=(1, 3, 416, 560))
