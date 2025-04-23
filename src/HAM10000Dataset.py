@@ -1,6 +1,7 @@
 from torchvision import transforms
 from torch.utils.data.dataset import Dataset
 from PIL import Image
+from tqdm import tqdm
 
 
 class HAM10000Dataset(Dataset):
