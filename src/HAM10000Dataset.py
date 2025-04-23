@@ -5,13 +5,11 @@ from PIL import Image
 
 class HAM10000Dataset(Dataset):
 	def __init__(self, df, data_folder, image_size):
-	# def __init__(self, df, data_folder, image_size, padding):
 		self.df = df
 		self.images_folder = data_folder / 'images'
 		self.masks_folder = data_folder / 'semantic_segmentations'
 		self.image_size = image_size
 		self.mask_size = image_size
-		# self.mask_size = image_size if padding else tuple(x - 184 for x in image_size)
 
 		self.image_transform = transforms.Compose([
 			transforms.Resize(self.image_size),
@@ -23,13 +21,28 @@ class HAM10000Dataset(Dataset):
 			transforms.Resize(self.mask_size, interpolation=transforms.InterpolationMode.NEAREST),  # mantenim els valors discrets
 			transforms.PILToTensor()
 			])
-		
+
+		# To test
+		images = []
+		masks = []
+		for _, row in tqdm(df.iterrows(), total=len(df), desc="Preloading dataset to memory"):
+			image_id = row['image_id']
+			image, mask = self.__transform__(image_id)
+			images.append(image)
+			masks.append(mask)  # shape: (H, W) instead of (1, H, W)
+		self.images = torch.stack(images)
+		self.masks = torch.stack(masks) 
+		# end test
+
 	def __len__(self):
 		return len(self.df)		
 	
 	def __getitem__(self, idx):
-			image_id = self.df.iloc[idx]['image_id']
-			return self.__transform__(image_id)
+		# To test
+		return self.images[idx], self.masks[idx]
+		# end test
+		image_id = self.df.iloc[idx]['image_id']
+		return self.__transform__(image_id)
 	
 	def __transform__(self, image_id):
 		image_path = self.images_folder / f"{image_id}.jpg"
