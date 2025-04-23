@@ -149,7 +149,8 @@ if __name__ == "__main__":
 	from pathlib import Path
 	import os
 	import pickle
-	from model import UNet
+	# from model import UNet
+	from unet import UNet
 	from HAM10000Dataset import HAM10000Dataset
 	from torch.utils.data import DataLoader
 	from torch import nn, optim
