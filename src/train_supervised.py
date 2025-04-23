@@ -65,8 +65,6 @@ def train_one_epoch(model, train_loader, criterion, optimizer, epoch):
 		images = images.to(device)
 		targets = masks.long().to(device)  # (B, H, W)
 
-		print(images.shape)
-		print(targets.shape)
 		optimizer.zero_grad()
 		logits = model(images)  # (B, C, H, W)
 		loss = criterion(logits, targets)
