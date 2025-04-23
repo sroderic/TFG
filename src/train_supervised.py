@@ -64,6 +64,9 @@ def train_one_epoch(model, train_loader, criterion, optimizer, epoch):
 
 		images = images.to(device)
 		targets = masks.long().to(device)  # (B, H, W)
+
+		print(images.shape)
+		print(targets.shape)
 		optimizer.zero_grad()
 		logits = model(images)  # (B, C, H, W)
 		loss = criterion(logits, targets)
@@ -178,7 +181,7 @@ if __name__ == "__main__":
 
 	parser.add_argument('--colab', action='store_true')
 	# parser.add_argument('--mode', type=str, required=True, help='train, test, inference')
-	# parser.add_argument('--image_size', type=int, nargs=2, default=[428, 572], help='Input image size as two integers')
+	parser.add_argument('--image_size', type=int, required=True, help='512 for 512x384, 384 for 384x288, 256 for 256x192')
 	# parser.add_argument('--padding', action='store_true')
 	parser.add_argument('--epochs', type=int, required=True)
 	parser.add_argument('--batch', type=int, required=True)
@@ -216,7 +219,8 @@ if __name__ == "__main__":
 	class_to_int = dataset_info['class_to_int']
 
 	# Get datasets
-	image_size = (448, 608)
+	image_size = (args.image_size*450//600, args.image_size)
+	print(image_size)
 	train_dataset = HAM10000Dataset(
 		df_train,
 		data_folder,
