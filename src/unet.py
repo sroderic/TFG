@@ -36,3 +36,16 @@ class UNet(nn.Module):
 		out = self.out(up_4)
 
 		return out
+	
+
+if __name__ == "__main__":
+	from torchinfo import summary
+
+	# double_conv = DoubleConv(256, 256, 0)
+	# print(double_conv)
+
+	# model = UNet(3, 10, 0)
+	# summary(model, input_size=(1, 3, 428, 572))
+	model = UNet(3, 10)
+	summary(model, input_size=(1, 3, 192, 256))
+	# summary(model, input_size=(1, 3, 416, 560))
