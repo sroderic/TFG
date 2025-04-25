@@ -59,9 +59,9 @@ def train_model(model, train_loader, val_loader, criterion, optimizer, epochs, c
 				loss = criterion(logits, target)
 				val_loss += loss.item()
 		
-				prob = F.softmax(logits.detach().cpu(), dim=1) # [N, C, H, W] Probabilities
+				prob = F.softmax(logits, dim=1) # [N, C, H, W] Probabilities
 				pred = torch.argmax(prob, dim=1)  # [N, H, W] Class predictions
-				update_confusion_matrix_elements(pred, target.detach().cpu(), conf_matrices, num_classes)
+				update_confusion_matrix_elements(pred, target, conf_matrices, num_classes)
 				
 		
 		avg_val_loss = val_loss / len(val_loader)
@@ -73,8 +73,8 @@ def train_model(model, train_loader, val_loader, criterion, optimizer, epochs, c
 		print(f'   🔵 precision       : {metrics["precision"]:4f}')
 		print(f'   🔵 recall          : {metrics["recall"]:4f}')
 		print(f'   🔵 f1              : {metrics["f1"]:4f}')
-		print(f'   🔵 IoU             : {metrics["IoU"]:4f}')
-		print(f'   🔵 Dice            : {metrics["Dice"]:4f}')
+		print(f'   🔵 IoU             : {metrics["iou"]:4f}')
+		print(f'   🔵 Dice            : {metrics["dice"]:4f}')
 
 				
 		# Save best model
