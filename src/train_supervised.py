@@ -42,7 +42,7 @@ def train_model(model, train_loader, val_loader, criterion, optimizer, epochs, c
 		# Training
 		model.train()
 		avg_train_loss = train_one_epoch(model, train_loader, criterion, optimizer)
-		metrics['train_loss'].append(avg_train_loss)
+		metrics['train_loss'] = avg_train_loss
 		print(f"   🟢 Train Loss: {avg_train_loss:.4f} -- Elapsed: {datetime.timedelta(seconds=time.time()-start_training)}")
 	
 		# Validation	
@@ -65,7 +65,7 @@ def train_model(model, train_loader, val_loader, criterion, optimizer, epochs, c
 				
 		
 		avg_val_loss = val_loss / len(val_loader)
-		metrics['val_loss'].append(avg_train_loss)
+		metrics['val_loss'] = avg_train_loss
 		calculate_metrics(metrics, conf_matrices, num_classes)
 
 		print(f"   🔵 Val   Loss      : {avg_val_loss:.4f} -- Elapsed: {datetime.timedelta(seconds=time.time()-start_training)}")
