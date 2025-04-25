@@ -61,7 +61,7 @@ def train_model(model, train_loader, val_loader, criterion, optimizer, epochs, c
 		
 				prob = F.softmax(logits.detach().cpu(), dim=1) # [N, C, H, W] Probabilities
 				pred = torch.argmax(prob, dim=1)  # [N, H, W] Class predictions
-				update_confusion_matrix_elements(pred, target, conf_matrices, num_classes)
+				update_confusion_matrix_elements(pred, target.detach().cpu(), conf_matrices, num_classes)
 				
 		
 		avg_val_loss = val_loss / len(val_loader)
