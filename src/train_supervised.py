@@ -4,61 +4,11 @@ from tqdm import tqdm
 import torch.nn as nn
 import torch.nn.functional as F
 
-class DiceLoss(nn.Module):
-	def __init__(self, smooth = 0.0):
-		super(DiceLoss, self).__init__()
-		self.smooth = smooth
-		self.eps = 1e-7
+from torch.utils.tensorboard import SummaryWriter
 
-	def forward(self, logit, target):
-		prob = F.softmax(logit, dim=1)
-		batch_size = target.size(0) # batch size
-		num_classes = logit.size(1)  # Number of classes (C)
-		
-		target = target.view(batch_size, -1) # [N, HxW]
-		prob = prob.view(batch_size, num_classes, -1) # [N, C, HxW]
-
-		target = F.one_hot(target, num_classes)  # [N, HxW] -> [N,HxW, C]
-		target = target.permute(0, 2, 1)  #  [N,HxW, C] -> [N, C, H*W]
-
-		target = target.type_as(prob)
-		
-		intersection = torch.sum(prob * target, dim=(0,2))
-		sum_sets = torch.sum(prob + target, dim=(0,2))
-
-		dice_score = (2.0 * intersection + self.smooth) / (sum_sets + self.smooth).clamp_min(self.eps)
-		loss = 1.0 - dice_score
-		mask = target.sum((0, 2)) > 0
-		loss *= mask.to(loss.dtype)
-		return loss.mean()
-
-def dice_coeff(y_pred, y_true, smooth=0.0, eps = 1e-7, return_per_class=False):
-
-	bs = y_true.size(0) # batch size
-	num_classes = y_pred.size(1)  # Number of classes (C)
-	
-	y_pred = F.softmax(y_pred, dim=1)  # [N, C, H, W] Probabilities
-	y_pred = torch.argmax(y_pred, dim=1) # [N, H, W] Predicted classes
-
-	
-	y_true = y_true.view(bs, -1) # [N, HxW]
-	y_pred = y_pred.view(bs, -1) # [N, HxW]
-	
-	y_true = F.one_hot(y_true, num_classes)  # [N, HxW] -> [N,HxW, C]
-	y_true = y_true.permute(0, 2, 1)  #  [N,HxW, C] -> [N, C, H*W]
-
-	y_pred = F.one_hot(y_pred, num_classes)  # [N, HxW] -> [N,HxW, C]
-	y_pred = y_pred.permute(0, 2, 1)  #  [N,HxW, C] -> [N, C, H*W]
-	
-	output = y_pred
-	target = y_true
-	intersection = torch.sum(output * target, dim=(0,2))
-	union = torch.sum((output + target) > 0, dim=(0,2))
-	dice_score = (2 * intersection + smooth) / (union + smooth).clamp_min(eps)
-
-	return dice_score.mean()
-
-def train_one_epoch(model, train_loader, criterion, optimizer, epoch):
+from losses import DiceLoss, FocalLoss
+from metrics import reset_confusion_matrix_elements, update_confusion_matrix_elements, calculate_metrics
+def train_one_epoch(model, train_loader, criterion, optimizer):
 	running_loss = 0.
 	for images, masks in tqdm(train_loader, desc=f"Training"):
 
@@ -78,14 +28,6 @@ def train_one_epoch(model, train_loader, criterion, optimizer, epoch):
 def train_model(model, train_loader, val_loader, criterion, optimizer, epochs, checkpoints_folder, experiment):
 
 	# device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-	# Metrics per epoch
-	
-	metrics = {
-		'train_loss': [],
-		'val_loss': [],
-		'dice_coeff': []
-	}
-	
 	
 	# To save the best model
 	best_val_loss = float('inf')
@@ -94,38 +36,45 @@ def train_model(model, train_loader, val_loader, criterion, optimizer, epochs, c
 
 	start_training = time.time()
 	for epoch in range(epochs):
+		metrics = {'epoch': epoch + 1}
+		conf_matrices = { }
 		print(f"📘 Epoch [{epoch+1}/{epochs}]")
 		# Training
 		model.train()
-		avg_train_loss = train_one_epoch(model, train_loader, criterion, optimizer, epoch)
+		avg_train_loss = train_one_epoch(model, train_loader, criterion, optimizer)
 		metrics['train_loss'].append(avg_train_loss)
 		print(f"   🟢 Train Loss: {avg_train_loss:.4f} -- Elapsed: {datetime.timedelta(seconds=time.time()-start_training)}")
 	
 		# Validation	
 		val_loss = 0.
-		val_dice = 0.
+		reset_confusion_matrix_elements(conf_matrices, num_classes)
 		model = model.eval()
 		with torch.no_grad():
 			for images, masks in tqdm(val_loader, desc=f"Validation"):
 				images = images.to(device)
-				targets = masks.long().to(device)  # (B, H, W)
+				target = masks.long().to(device)  # (B, H, W)
 		
 				# forward
 				logits = model(images)  # (B, C, H, W)
-				loss = criterion(logits, targets)
-		
+				loss = criterion(logits, target)
 				val_loss += loss.item()
-				dice = dice_coeff(logits, targets) # [B, C]
-				val_dice += dice.item()
+		
+				prob = F.softmax(logits.detach().cpu(), dim=1) # [N, C, H, W] Probabilities
+				pred = torch.argmax(prob, dim=1)  # [N, H, W] Class predictions
+				update_confusion_matrix_elements(pred, target, conf_matrices, num_classes)
+				
 		
 		avg_val_loss = val_loss / len(val_loader)
-		avg_val_dice = val_dice / len(val_loader)
-
-		metrics['val_loss'].append(avg_val_loss)
-		metrics['dice_coeff'].append(avg_val_dice)
+		metrics['val_loss'].append(avg_train_loss)
+		calculate_metrics(metrics, conf_matrices, num_classes)
 
 		print(f"   🔵 Val   Loss      : {avg_val_loss:.4f} -- Elapsed: {datetime.timedelta(seconds=time.time()-start_training)}")
-		print(f'   🔵 Dice Coefficient: {avg_val_dice:4f}')
+		print(f'   🔵 accuracy        : {metrics['accuracy']:4f}')
+		print(f'   🔵 precision       : {metrics['precision']:4f}')
+		print(f'   🔵 recall          : {metrics['recall']:4f}')
+		print(f'   🔵 f1              : {metrics['f1']:4f}')
+		print(f'   🔵 IoU             : {metrics['IoU']:4f}')
+		print(f'   🔵 Dice            : {metrics['Dice']:4f}')
 
 				
 		# Save best model
@@ -151,7 +100,7 @@ if __name__ == "__main__":
 	import pickle
 	# from model import UNet
 	from unet import UNet
-	from HAM10000Dataset import HAM10000Dataset
+	from dataset import HAM10000Dataset
 	from torch.utils.data import DataLoader
 	from torch import nn, optim
 	
@@ -201,11 +150,15 @@ if __name__ == "__main__":
 	# Data folders
 	if args.colab:
 		root_path = Path('/content/TFG')
+		drive_path = Path('/content/drive/MyDrive/TFG')
+		checkpoints_folder = drive_path / 'checkpoints'
+		logs_folder = drive_path / 'logs'
 	else:
 		root_path = Path.home() / 'Documents' / 'TFG'
-	
+		checkpoints_folder = root_path / 'checkpoints'
+		logs_folder = root_path / 'logs'
+		
 	data_folder = root_path / 'data'
-	checkpoints_folder = root_path / 'checkpoints'
 	checkpoints_folder.mkdir(exist_ok=True)
 
 	# Get dataset info
@@ -223,13 +176,11 @@ if __name__ == "__main__":
 		df_train,
 		data_folder,
 		image_size,
-		# args.padding
 	)
 	val_dataset = HAM10000Dataset(
 		df_val,
 		data_folder,
 		image_size,
-		# args.padding
 	)
 
 	# Get dataloaders
@@ -260,18 +211,18 @@ if __name__ == "__main__":
 			# padding=1 if args.padding else 0
 		).to(device)
 
-	base_model_path = checkpoints_folder / 'untrained_model.pth'
-	if base_model_path.exists():
-		model.load_state_dict(
-			torch.load(
-				base_model_path,
-				weights_only=False,
-				map_location=device
-			)
-		)
-	else:
-		# Save base untrained model
-		torch.save(model.state_dict(), base_model_path)
+	# base_model_path = checkpoints_folder / 'untrained_model.pth'
+	# if base_model_path.exists():
+	# 	model.load_state_dict(
+	# 		torch.load(
+	# 			base_model_path,
+	# 			weights_only=False,
+	# 			map_location=device
+	# 		)
+	# 	)
+	# else:
+	# 	# Save base untrained model
+	# 	torch.save(model.state_dict(), base_model_path)
 
 	# Get Loss function and optimizer
 	if args.loss == 'Cross':
@@ -279,8 +230,7 @@ if __name__ == "__main__":
 	elif args.loss == 'Dice':
 		criterion = DiceLoss()
 	elif args.loss == 'Focal':
-		print('Still to develop, please come back soon!')
-		exit()
+		criterion = FocalLoss()
 	else:
 		print('Optionss: Cross, Dice, Focal')
 		exit()
