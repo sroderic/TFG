@@ -69,12 +69,12 @@ def train_model(model, train_loader, val_loader, criterion, optimizer, epochs, c
 		calculate_metrics(metrics, conf_matrices, num_classes)
 
 		print(f"   🔵 Val   Loss      : {avg_val_loss:.4f} -- Elapsed: {datetime.timedelta(seconds=time.time()-start_training)}")
-		print(f'   🔵 accuracy        : {metrics['accuracy']:4f}')
-		print(f'   🔵 precision       : {metrics['precision']:4f}')
-		print(f'   🔵 recall          : {metrics['recall']:4f}')
-		print(f'   🔵 f1              : {metrics['f1']:4f}')
-		print(f'   🔵 IoU             : {metrics['IoU']:4f}')
-		print(f'   🔵 Dice            : {metrics['Dice']:4f}')
+		print(f'   🔵 accuracy        : {metrics["accuracy"]:4f}')
+		print(f'   🔵 precision       : {metrics["precision"]:4f}')
+		print(f'   🔵 recall          : {metrics["recall"]:4f}')
+		print(f'   🔵 f1              : {metrics["f1"]:4f}')
+		print(f'   🔵 IoU             : {metrics["IoU"]:4f}')
+		print(f'   🔵 Dice            : {metrics["Dice"]:4f}')
 
 				
 		# Save best model
