@@ -98,8 +98,8 @@ if __name__ == "__main__":
 	from pathlib import Path
 	import os
 	import pickle
-	# from model import UNet
-	from unet import UNet
+	from model import UNet, UNetRedux
+	# from unet import UNet
 	from dataset import HAM10000Dataset
 	from torch.utils.data import DataLoader
 	from torch import nn, optim
@@ -128,7 +128,7 @@ if __name__ == "__main__":
 	parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
 	parser.add_argument('--colab', action='store_true')
-	# parser.add_argument('--mode', type=str, required=True, help='train, test, inference')
+	parser.add_argument('--model', type=str, required=True, help='UNet, UNetRedux')
 	parser.add_argument('--image_size', type=int, required=True, help='512 for 512x384, 384 for 384x288, 256 for 256x192')
 	# parser.add_argument('--padding', action='store_true')
 	parser.add_argument('--epochs', type=int, required=True)
@@ -205,11 +205,22 @@ if __name__ == "__main__":
 	num_classes = len(class_to_int)
 	device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-	model = UNet(
+	if args.model == 'UNet':
+		model = UNet(
 			in_channels=in_channels,
 			num_classes=num_classes,
 			# padding=1 if args.padding else 0
 		).to(device)
+	elif args.loss == 'UNetRedux':
+		model = UNetRedux(
+			in_channels=in_channels,
+			num_classes=num_classes,
+			# padding=1 if args.padding else 0
+		).to(device)
+	else:
+		print('Optionss: UNet, UNetRedux')
+		exit()
+		
 
 	# base_model_path = checkpoints_folder / 'untrained_model.pth'
 	# if base_model_path.exists():
@@ -232,7 +243,7 @@ if __name__ == "__main__":
 	elif args.loss == 'Focal':
 		criterion = FocalLoss()
 	else:
-		print('Optionss: Cross, Dice, Focal')
+		print('Options: Cross, Dice, Focal')
 		exit()
 	optimizer = optim.Adam(model.parameters(), lr=args.lr)
 
