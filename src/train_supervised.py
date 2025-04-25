@@ -14,7 +14,6 @@ def train_one_epoch(model, train_loader, criterion, optimizer):
 
 		images = images.to(device)
 		targets = masks.long().to(device)  # (B, H, W)
-
 		optimizer.zero_grad()
 		logits = model(images)  # (B, C, H, W)
 		loss = criterion(logits, targets)
@@ -25,14 +24,20 @@ def train_one_epoch(model, train_loader, criterion, optimizer):
 
 	return running_loss / len(train_loader)
 
-def train_model(model, train_loader, val_loader, criterion, optimizer, epochs, checkpoints_folder, experiment):
+def train_model(model, train_loader, val_loader, criterion, optimizer, epochs, save_folder, experiment):
 
 	# device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 	
+	checkpoints_folder = save_folder / 'checkpoints' / f'{experiment}'
+	checkpoints_folder.mkdir(exist_ok=True)
+	logs_folder = save_folder / 'logs' / f'{experiment}'
+	logs_folder.mkdir(exist_ok=True)
+
 	# To save the best model
 	best_val_loss = float('inf')
-	experiment_folder = checkpoints_folder / f'{experiment}'
-	experiment_folder.mkdir(exist_ok=True)
+
+
+	writer = SummaryWriter(logs_folder)
 
 	start_training = time.time()
 	for epoch in range(epochs):
@@ -43,6 +48,7 @@ def train_model(model, train_loader, val_loader, criterion, optimizer, epochs, c
 		model.train()
 		avg_train_loss = train_one_epoch(model, train_loader, criterion, optimizer)
 		metrics['train_loss'] = avg_train_loss
+		writer.add_scalar("Loss/train", avg_train_loss, epoch + 1)
 		print(f"   🟢 Train Loss: {avg_train_loss:.4f} -- Elapsed: {datetime.timedelta(seconds=time.time()-start_training)}")
 	
 		# Validation	
@@ -66,6 +72,7 @@ def train_model(model, train_loader, val_loader, criterion, optimizer, epochs, c
 		
 		avg_val_loss = val_loss / len(val_loader)
 		metrics['val_loss'] = avg_train_loss
+		writer.add_scalar("Loss/validation", avg_val_loss, epoch + 1)
 		calculate_metrics(metrics, conf_matrices, num_classes)
 
 		print(f"   🔵 Val   Loss      : {avg_val_loss:.4f} -- Elapsed: {datetime.timedelta(seconds=time.time()-start_training)}")
@@ -81,12 +88,12 @@ def train_model(model, train_loader, val_loader, criterion, optimizer, epochs, c
 		if avg_val_loss < best_val_loss:
 			best_val_loss = avg_val_loss
 			
-			best_model_file = experiment_folder / 'best_model.pth'
+			best_model_file = checkpoints_folder / 'best_model.pth'
 			torch.save(model.state_dict(), best_model_file)
 			print("💾 Best model saved!")
 		print('........................................................................')
 
-	metrics_file = experiment_folder / 'metrics.pt'
+	metrics_file = checkpoints_folder / 'metrics.pt'
 	torch.save(metrics, metrics_file)
 	print("🏁 Entrenament complet.")
 
@@ -150,16 +157,12 @@ if __name__ == "__main__":
 	# Data folders
 	if args.colab:
 		root_path = Path('/content/TFG')
-		drive_path = Path('/content/drive/MyDrive/TFG')
-		checkpoints_folder = drive_path / 'checkpoints'
-		logs_folder = drive_path / 'logs'
+		save_folder = Path('/content/drive/MyDrive/TFG')
 	else:
 		root_path = Path.home() / 'Documents' / 'TFG'
-		checkpoints_folder = root_path / 'checkpoints'
-		logs_folder = root_path / 'logs'
-		
+		save_folder = root_path
+	
 	data_folder = root_path / 'data'
-	checkpoints_folder.mkdir(exist_ok=True)
 
 	# Get dataset info
 	dataset_info_path = data_folder / 'dataset_info.pkl'
@@ -257,6 +260,6 @@ if __name__ == "__main__":
 		criterion= criterion,
 		optimizer= optimizer,
 		epochs=args.epochs,
-		checkpoints_folder= checkpoints_folder,
+		save_folder= save_folder,
 		experiment=args.experiment
 	)
