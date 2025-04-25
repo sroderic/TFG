@@ -211,7 +211,7 @@ if __name__ == "__main__":
 			num_classes=num_classes,
 			# padding=1 if args.padding else 0
 		).to(device)
-	elif args.loss == 'UNetRedux':
+	elif args.model == 'UNetRedux':
 		model = UNetRedux(
 			in_channels=in_channels,
 			num_classes=num_classes,
