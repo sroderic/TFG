@@ -48,7 +48,6 @@ def train_model(model, train_loader, val_loader, criterion, optimizer, epochs, s
 		model.train()
 		avg_train_loss = train_one_epoch(model, train_loader, criterion, optimizer)
 		metrics['train_loss'] = avg_train_loss
-		writer.add_scalar("Loss/train", avg_train_loss, epoch + 1)
 		print(f"   🟢 Train Loss: {avg_train_loss:.4f} -- Elapsed: {datetime.timedelta(seconds=time.time()-start_training)}")
 	
 		# Validation	
@@ -72,6 +71,7 @@ def train_model(model, train_loader, val_loader, criterion, optimizer, epochs, s
 		
 		avg_val_loss = val_loss / len(val_loader)
 		metrics['val_loss'] = avg_train_loss
+		writer.add_scalar('Training vs. Validation Loss', { 'Training': avg_train_loss, 'Validation': avg_train_loss }, epoch + 1)
 		writer.add_scalar("Loss/validation", avg_val_loss, epoch + 1)
 		calculate_metrics(metrics, conf_matrices, num_classes)
 
@@ -96,6 +96,7 @@ def train_model(model, train_loader, val_loader, criterion, optimizer, epochs, s
 	metrics_file = checkpoints_folder / 'metrics.pt'
 	torch.save(metrics, metrics_file)
 	print("🏁 Entrenament complet.")
+	writer.close()
 
 if __name__ == "__main__":
 	import argparse
@@ -135,9 +136,8 @@ if __name__ == "__main__":
 	parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
 	parser.add_argument('--colab', action='store_true')
-	parser.add_argument('--model', type=str, required=True, help='UNet, UNetRedux')
+	parser.add_argument('--model', type=str, required=True, help='UNet, UNetRedux')	
 	parser.add_argument('--image_size', type=int, required=True, help='512 for 512x384, 384 for 384x288, 256 for 256x192')
-	# parser.add_argument('--padding', action='store_true')
 	parser.add_argument('--epochs', type=int, required=True)
 	parser.add_argument('--batch', type=int, required=True)
 	parser.add_argument('--lr', type=float, required=True)
@@ -212,14 +212,18 @@ if __name__ == "__main__":
 		model = UNet(
 			in_channels=in_channels,
 			num_classes=num_classes,
-			# padding=1 if args.padding else 0
+			redux=1
 		).to(device)
 	elif args.model == 'UNetRedux':
-		model = UNetRedux(
+		model = UNet(
 			in_channels=in_channels,
 			num_classes=num_classes,
-			# padding=1 if args.padding else 0
+			redux=2
 		).to(device)
+		# model = UNetRedux(
+		# 	in_channels=in_channels,
+		# 	num_classes=num_classes,
+		# ).to(device)
 	else:
 		print('Optionss: UNet, UNetRedux')
 		exit()

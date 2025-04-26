@@ -16,6 +16,8 @@ class HAM10000Dataset(Dataset):
 		self.image_transform = transforms.Compose([
 			transforms.Resize(self.image_size),
 			transforms.ToTensor(),
+			# transforms.Normalize(mean=0.5, std=0.5)
+			
 			# transforms.Normalize(mean=[0.7565, 0.5503, 0.5762],
 						# std=[0.1427, 0.1534, 0.1717])
 			])
