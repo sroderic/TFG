@@ -71,9 +71,12 @@ def train_model(model, train_loader, val_loader, criterion, optimizer, epochs, s
 		
 		avg_val_loss = val_loss / len(val_loader)
 		metrics['val_loss'] = avg_train_loss
-		writer.add_scalar('Training vs. Validation Loss', { 'Training': avg_train_loss, 'Validation': avg_train_loss }, epoch + 1)
-		writer.add_scalar("Loss/validation", avg_val_loss, epoch + 1)
 		calculate_metrics(metrics, conf_matrices, num_classes)
+
+		writer.add_scalar('Loss/training', avg_train_loss, epoch + 1)
+		writer.add_scalar("Loss/validation", avg_val_loss, epoch + 1)
+		writer.add_scalar("IoU", metrics["iou"], epoch + 1)
+
 
 		print(f"   🔵 Val   Loss      : {avg_val_loss:.4f} -- Elapsed: {datetime.timedelta(seconds=time.time()-start_training)}")
 		print(f'   🔵 accuracy        : {metrics["accuracy"]:4f}')
