@@ -106,7 +106,7 @@ if __name__ == "__main__":
 	from pathlib import Path
 	import os
 	import pickle
-	from model import UNet, UNetRedux
+	from model import UNet
 	# from unet import UNet
 	from dataset import HAM10000Dataset
 	from torch.utils.data import DataLoader
