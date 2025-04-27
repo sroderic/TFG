@@ -95,7 +95,7 @@ def train_model(model, train_loader, val_loader, criterion, optimizer, epochs, m
 
 				
 		# Save best model
-		if epoch_metrics['iou'] > best_iou:
+		if val_iou > best_iou:
 			best_iou = val_iou
 			
 			best_model_file = checkpoints_folder / 'best_model.pth'
