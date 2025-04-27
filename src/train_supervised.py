@@ -35,9 +35,9 @@ def train_one_epoch(model, train_loader, criterion, optimizer, metrics, device):
 	return running_loss / len(train_loader), epcoch_metrics['iou']
 
 def train_model(model, train_loader, val_loader, criterion, optimizer, epochs, metrics, save_folder, experiment, device):
-	checkpoints_folder = save_folder / 'checkpoints' / f'{experiment}'
+	checkpoints_folder = save_folder / 'checkpoints' / f"{experiment}"
 	checkpoints_folder.mkdir(exist_ok=True)
-	logs_folder = save_folder / 'logs' / f'{experiment}'
+	logs_folder = save_folder / 'logs' / f"{experiment}"
 	logs_folder.mkdir(exist_ok=True)
 
 	# To save the best model
@@ -51,9 +51,9 @@ def train_model(model, train_loader, val_loader, criterion, optimizer, epochs, m
 		print(f"📘 Epoch [{epoch+1}/{epochs}]")
 		# Training
 		model.train()
-		avg_train_loss, metrics = train_one_epoch(model, train_loader, criterion, optimizer, metric, device)
+		avg_train_loss, metrics = train_one_epoch(model, train_loader, criterion, optimizer, metrics, device)
 		print(f"   🟢 Train Loss: {avg_train_loss:.4f} -- Elapsed: {datetime.timedelta(seconds=time.time()-start_training)}")
-		print(f'   🔵 IoU       : {epoch_metrics['iou']:4f}')
+		print(f"   🔵 IoU       : {epoch_metrics['iou']:4f}")
 
 		# Validation	
 		val_loss = 0.
@@ -72,32 +72,32 @@ def train_model(model, train_loader, val_loader, criterion, optimizer, epochs, m
 		
 		avg_val_loss = val_loss / len(val_loader)
 		epoch_metrics = metrics.get_metrics()
-		epoch_metrics["epoch"] = epoch + 1
+		epoch_metrics['epoch'] = epoch + 1
 		epoch_metrics['train_loss'] = avg_train_loss
 		epoch_metrics['val_loss'] = avg_train_loss
 		training_metrics.append(epoch_metrics)
 		writer.add_scalar('Loss/training', avg_train_loss, epoch + 1)
 		writer.add_scalar("Loss/validation", avg_val_loss, epoch + 1)
-		writer.add_scalar("IoU", epoch_metrics["iou"], epoch + 1)
+		writer.add_scalar("IoU", epoch_metrics['iou'], epoch + 1)
 
 
 		print(f"   🔵 Val Loss : {avg_val_loss:.4f} -- Elapsed: {datetime.timedelta(seconds=time.time()-start_training)}")
-		print(f'   🔵 accuracy : {epoch_metrics["accuracy"]:4f}')
-		print(f'   🔵 precision: {epoch_metrics["precision"]:4f}')
-		print(f'   🔵 recall   : {epoch_metrics["recall"]:4f}')
-		print(f'   🔵 f1       : {epoch_metrics["f1"]:4f}')
-		print(f'   🔵 IoU      : {epoch_metrics["iou"]:4f}')
-		print(f'   🔵 Dice     : {epoch_metrics["dice"]:4f}')
+		print(f"   🔵 accuracy : {epoch_metrics['accuracy']:4f}")
+		print(f"   🔵 precision: {epoch_metrics['precision']:4f}")
+		print(f"   🔵 recall   : {epoch_metrics['recall']:4f}")
+		print(f"   🔵 f1       : {epoch_metrics['f1']:4f}")
+		print(f"   🔵 IoU      : {epoch_metrics['iou']:4f}")
+		print(f"   🔵 Dice     : {epoch_metrics['dice']:4f}")
 
 				
 		# Save best model
-		if epoch_metrics["iou"] > best_iou:
-			best_iou = epoch_metrics["iou"]
+		if epoch_metrics['iou'] > best_iou:
+			best_iou = epoch_metrics['iou']
 			
 			best_model_file = checkpoints_folder / 'best_model.pth'
 			torch.save(model.state_dict(), best_model_file)
 			print("💾 Best model saved!")
-		print('........................................................................')
+		print("........................................................................")
 
 	metrics_file = checkpoints_folder / 'metrics.pt'
 	torch.save(training_metrics, metrics_file)
