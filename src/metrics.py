@@ -34,17 +34,18 @@ class Metrics():
 		fn = np.sum(self.conf_matrix, 1) - tp
 		tn = np.sum(self.conf_matrix) - tp - fp - fn
 
-		metrics = {
-			'epoch': 0,
-			'train_loss': 0,
-			'val_loss'
-			'confusion_matrix': self.conf_matrix,
-			'accuracy': (tp + tn) / (tp + tn + fp + fn),
-			'precision': tp / (tp + fp),
-			'recall': tp / (tp + fn),
-			'f1': tp / (tp + (fp + fn) / 2.),
-			'dice': 2 * tp / (2 * tp + fp + fn),
-			'iou': tp / (tp + fp + fn)
-		}
+		with np.errstate(divide='ignore', invalid='ignore'):
+			metrics = {
+				'epoch': 0,
+				'train_loss': 0,
+				'val_loss'
+				'confusion_matrix': self.conf_matrix,
+				'accuracy': (tp + tn) / (tp + tn + fp + fn),
+				'precision': tp / (tp + fp),
+				'recall': tp / (tp + fn),
+				'f1': tp / (tp + (fp + fn) / 2.),
+				'dice': 2 * tp / (2 * tp + fp + fn),
+				'iou': tp / (tp + fp + fn)
+			}
 
 		return metrics

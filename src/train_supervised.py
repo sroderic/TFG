@@ -31,9 +31,9 @@ def train_one_epoch(model, train_loader, criterion, optimizer, metrics, device):
 
 		# Add metrics to epoch
 		metrics.add(logits.detach(), target.detach())
+	
 	epoch_metrics = metrics.get_metrics()
-
-	return running_loss / len(train_loader), epoch_metrics['iou']
+	return running_loss / len(train_loader), epoch_metrics
 
 def train_model(model, train_loader, val_loader, criterion, optimizer, epochs, metrics, save_folder, experiment, device):
 	checkpoints_folder = save_folder / 'checkpoints' / f"{experiment}"
@@ -50,9 +50,11 @@ def train_model(model, train_loader, val_loader, criterion, optimizer, epochs, m
 	start_training = time.time()
 	for epoch in range(epochs):
 		print(f"📘 Epoch [{epoch+1}/{epochs}]")
+		
 		# Training
 		model.train()
 		avg_train_loss, epoch_metrics = train_one_epoch(model, train_loader, criterion, optimizer, metrics, device)
+
 		print(f"   🟢 Train Loss: {avg_train_loss:.4f} -- Elapsed: {datetime.timedelta(seconds=time.time()-start_training)}")
 		print(f"   🔵 IoU       : {np.nanmean(epoch_metrics['iou']):4f}")
 
