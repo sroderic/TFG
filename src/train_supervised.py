@@ -78,10 +78,11 @@ def train_model(model, train_loader, val_loader, criterion, optimizer, epochs, m
 		epoch_metrics['epoch'] = epoch + 1
 		epoch_metrics['train_loss'] = avg_train_loss
 		epoch_metrics['val_loss'] = avg_train_loss
+		val_iou = np.nanmean(epoch_metrics['iou'])
 		training_metrics.append(epoch_metrics)
 		writer.add_scalar('Loss/training', avg_train_loss, epoch + 1)
 		writer.add_scalar("Loss/validation", avg_val_loss, epoch + 1)
-		writer.add_scalar("IoU", np.nanmean(epoch_metrics['iou']), epoch + 1)
+		writer.add_scalar("IoU", val_iou, epoch + 1)
 
 
 		print(f"   🔵 Val Loss : {avg_val_loss:.4f} -- Elapsed: {datetime.timedelta(seconds=time.time()-start_training)}")
@@ -89,13 +90,13 @@ def train_model(model, train_loader, val_loader, criterion, optimizer, epochs, m
 		print(f"   🔵 precision: {np.nanmean(epoch_metrics['precision']):4f}")
 		print(f"   🔵 recall   : {np.nanmean(epoch_metrics['recall']):4f}")
 		print(f"   🔵 f1       : {np.nanmean(epoch_metrics['f1']):4f}")
-		print(f"   🔵 IoU      : {np.nanmean(epoch_metrics['iou']):4f}")
+		print(f"   🔵 IoU      : {val_iou:4f}")
 		print(f"   🔵 Dice     : {np.nanmean(epoch_metrics['dice']):4f}")
 
 				
 		# Save best model
 		if epoch_metrics['iou'] > best_iou:
-			best_iou = epoch_metrics['iou']
+			best_iou = val_iou
 			
 			best_model_file = checkpoints_folder / 'best_model.pth'
 			torch.save(model.state_dict(), best_model_file)
