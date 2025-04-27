@@ -80,8 +80,10 @@ def train_model(model, train_loader, val_loader, criterion, optimizer, epochs, m
 		epoch_metrics['val_loss'] = avg_train_loss
 		val_iou = np.nanmean(epoch_metrics['iou'])
 		training_metrics.append(epoch_metrics)
-		writer.add_scalar('Loss/training', avg_train_loss, epoch + 1)
-		writer.add_scalar("Loss/validation", avg_val_loss, epoch + 1)
+		# writer.add_scalar('Loss/training', avg_train_loss, epoch + 1)
+		# writer.add_scalar("Loss/validation", avg_val_loss, epoch + 1)
+		writer.add_scalars('Loss', {'training':avg_train_loss,
+									'validation':avg_val_loss}, epoch + 1)
 		writer.add_scalar("IoU", val_iou, epoch + 1)
 
 
