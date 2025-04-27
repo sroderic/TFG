@@ -26,7 +26,9 @@ if __name__ == "__main__":
 		save_folder = root_path
 	
 	data_folder = root_path / 'data'
-
+	root_path.mkdir(exist_ok=True)
+	save_folder.mkdir(exist_ok=True)
+	
 	# Get dataset info
 	dataset_info_path = data_folder / 'dataset_info.pkl'
 	with open(dataset_info_path, 'rb') as f:

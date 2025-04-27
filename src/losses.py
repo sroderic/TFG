@@ -6,7 +6,6 @@ class DiceLoss(nn.Module):
 	def __init__(self, smooth = 1.0):
 		super(DiceLoss, self).__init__()
 		self.smooth = smooth
-		self.eps = 1e-7
 
 	def forward(self, logits, target):
 
