@@ -3,6 +3,7 @@ import datetime
 from tqdm import tqdm
 import torch
 import torch.nn.functional as F
+import numpy as np
 
 from torch.utils.tensorboard import SummaryWriter
 
@@ -53,7 +54,7 @@ def train_model(model, train_loader, val_loader, criterion, optimizer, epochs, m
 		model.train()
 		avg_train_loss, epoch_metrics = train_one_epoch(model, train_loader, criterion, optimizer, metrics, device)
 		print(f"   🟢 Train Loss: {avg_train_loss:.4f} -- Elapsed: {datetime.timedelta(seconds=time.time()-start_training)}")
-		print(f"   🔵 IoU       : {epoch_metrics['iou']:4f}")
+		print(f"   🔵 IoU       : {np.nanmean(epoch_metrics['iou']):4f}")
 
 		# Validation	
 		val_loss = 0.
@@ -82,12 +83,12 @@ def train_model(model, train_loader, val_loader, criterion, optimizer, epochs, m
 
 
 		print(f"   🔵 Val Loss : {avg_val_loss:.4f} -- Elapsed: {datetime.timedelta(seconds=time.time()-start_training)}")
-		print(f"   🔵 accuracy : {epoch_metrics['accuracy']:4f}")
-		print(f"   🔵 precision: {epoch_metrics['precision']:4f}")
-		print(f"   🔵 recall   : {epoch_metrics['recall']:4f}")
-		print(f"   🔵 f1       : {epoch_metrics['f1']:4f}")
-		print(f"   🔵 IoU      : {epoch_metrics['iou']:4f}")
-		print(f"   🔵 Dice     : {epoch_metrics['dice']:4f}")
+		print(f"   🔵 accuracy : {np.nanmean(epoch_metrics['accuracy']):4f}")
+		print(f"   🔵 precision: {np.nanmean(epoch_metrics['precision']):4f}")
+		print(f"   🔵 recall   : {np.nanmean(epoch_metrics['recall']):4f}")
+		print(f"   🔵 f1       : {np.nanmean(epoch_metrics['f1']):4f}")
+		print(f"   🔵 IoU      : {np.nanmean(epoch_metrics['iou']):4f}")
+		print(f"   🔵 Dice     : {np.nanmean(epoch_metrics['dice']):4f}")
 
 				
 		# Save best model
