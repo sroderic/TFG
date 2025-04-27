@@ -2,10 +2,8 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from metrics import dice_coeff
-
 class DiceLoss(nn.Module):
-	def __init__(self, smooth = 0.0):
+	def __init__(self, smooth = 1.0):
 		super(DiceLoss, self).__init__()
 		self.smooth = smooth
 		self.eps = 1e-7
@@ -16,25 +14,27 @@ class DiceLoss(nn.Module):
 		# target [N, H, W]
 		
 		prob = F.softmax(logits, dim=1) # [N, C, H, W]
-		
 		num_classes = logits.size(1)  # Number of classes (C)
+		prob = prob.permute(0, 2, 3, 1).contiguous().view(-1, num_classes)
+		target = target.view(-1)
 		
-		target = F.one_hot(target, num_classes)  # [N, H, W] -> [N, H, W, C]
-		target = target.permute(0, 3, 1, 2)  #  [N,HxW, C] -> [N, C, H, W]
-
-		prob = prob.flatten(1)   # [N, C, H, W] -> [N, C x H x W]
-		target = target.flatten(1).type_as(prob)   # [N, C, H, W] -> [N, C x H x W]
-		
-		dice =  dice_coeff(prob, target, self.smooth, self.eps)
-		loss = 1.0 - dice
-
-		return loss.mean()
+		dice = []
+		for c in range(num_classes):
+			target_c = (target == c).float()
+			prob_c = prob[:, c]
+			
+			intersection = (prob_c * target_c).sum()
+			dice_c = (2.*intersection + self.smooth)/(prob_c.sum() + target_c.sum() + self.smooth)
+			dice.append(dice_c)
+		dice =  torch.stack(dice)
+		dice_loss = 1 - dice.mean()
+		return dice_loss
+	
 
 class FocalLoss(nn.Module):
-	def __init__(self):
+	def __init__(self, gamma=2.0):
 		super(FocalLoss, self).__init__()
-		self.gamma=2.0
-		self.alpha=0.25
+		self.gamma=gamma
 
 	def forward(self, logits, target):
 
@@ -44,10 +44,12 @@ class FocalLoss(nn.Module):
 		# Compute standard cross-entropy
 		ce = F.cross_entropy(logits, target, reduction='none')# [N, H, W]
 		
-		# Extract pt
-		pt = ce.exp()
+		# Extract pt (CE = -log(pt) -> pt = exp(-CE))
+		pt = (-ce).exp()
 
 		# apply the Focal scaling factor
-		loss = self.alpha * (1 - pt)**self.gamma * ce
+		focal_term = (1 - pt)**self.gamma
+		loss = focal_term * ce
 
 		return loss.mean()
+	
