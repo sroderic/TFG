@@ -5,7 +5,7 @@ from torchvision import transforms
 class UNet(nn.Module):
 	def __init__(self, in_channels, num_classes, redux):
 		super().__init__()
-		features = 64 // 2**redux
+		features = 64 // redux
 
 		# Encoder 1 - Double Convolution 3x3, ReLU (Downsampling) + max pool 2x2
 		self.double_convolution_down_1 = nn.Sequential(
