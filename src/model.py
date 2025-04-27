@@ -240,17 +240,17 @@ class UNet(nn.Module):
 # 		return transform(tensor)
 
 
-if __name__ == "__main__":
-	from torchinfo import summary
+# if __name__ == "__main__":
+# 	from torchinfo import summary
 
-	model = UNet(3, 8, redux=2)
-	summary(model, input_size=(1, 3, 192, 256))
+# 	model = UNet(3, 8, redux=2)
+# 	summary(model, input_size=(1, 3, 192, 256))
 
-	model = UNet(3, 8, redux=1)
-	summary(model, input_size=(1, 3, 192, 256))
-	# summary(model, input_size=(1, 3, 416, 560))
+# 	model = UNet(3, 8, redux=1)
+# 	summary(model, input_size=(1, 3, 192, 256))
+# 	# summary(model, input_size=(1, 3, 416, 560))
 
 
-	model = UNet(3, 8, redux=0)
-	summary(model, input_size=(1, 3, 192, 256))
-	# summary(model, input_size=(1, 3, 416, 560))
+# 	model = UNet(3, 8, redux=0)
+# 	summary(model, input_size=(1, 3, 192, 256))
+# 	# summary(model, input_size=(1, 3, 416, 560))
