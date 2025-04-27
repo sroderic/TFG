@@ -81,7 +81,7 @@ def train_model(model, train_loader, val_loader, criterion, optimizer, epochs, m
 		training_metrics.append(epoch_metrics)
 		writer.add_scalar('Loss/training', avg_train_loss, epoch + 1)
 		writer.add_scalar("Loss/validation", avg_val_loss, epoch + 1)
-		writer.add_scalar("IoU", epoch_metrics['iou'], epoch + 1)
+		writer.add_scalar("IoU", np.nanmean(epoch_metrics['iou']), epoch + 1)
 
 
 		print(f"   🔵 Val Loss : {avg_val_loss:.4f} -- Elapsed: {datetime.timedelta(seconds=time.time()-start_training)}")
