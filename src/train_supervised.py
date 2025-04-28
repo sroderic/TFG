@@ -9,8 +9,8 @@ from torch.utils.tensorboard import SummaryWriter
 
 def train_one_epoch(model, train_loader, criterion, optimizer, metrics, device):
 	running_loss = 0.
+	iou = np.ones(8) * 0.5
 	metrics.reset()
-
 	for images, masks in tqdm(train_loader, desc=f"Training"):
 		images = images.to(device) # [N, C, H, W]
 		target = masks.long().to(device)  # [N, H, W]
@@ -19,7 +19,11 @@ def train_one_epoch(model, train_loader, criterion, optimizer, metrics, device):
 		logits = model(images) # [N, C, H, W]
 
 		# Loss computation
-		loss = criterion(logits, target)
+		criterion_name = type(criterion).__name__.lower()
+		if 'focal' in criterion_name:
+			loss = criterion(logits, target, torch.from_numpy(iou).to(device))
+		else:
+			loss = criterion(logits, target)
 
 		# Back propagation
 		optimizer.zero_grad()
@@ -31,7 +35,7 @@ def train_one_epoch(model, train_loader, criterion, optimizer, metrics, device):
 
 		# Add metrics to epoch
 		metrics.add(logits.detach(), target.detach())
-	
+		iou = metrics.get_iou()
 	epoch_metrics = metrics.get_metrics()
 	return running_loss / len(train_loader), epoch_metrics
 
@@ -54,7 +58,6 @@ def train_model(model, train_loader, val_loader, criterion, optimizer, epochs, m
 		# Training
 		model.train()
 		avg_train_loss, epoch_metrics = train_one_epoch(model, train_loader, criterion, optimizer, metrics, device)
-
 		print(f"   🟢 Train Loss: {avg_train_loss:.4f} -- Elapsed: {datetime.timedelta(seconds=time.time()-start_training)}")
 		print(f"   🔵 IoU       : {np.nanmean(epoch_metrics['iou'][1:8]):4f}")
 

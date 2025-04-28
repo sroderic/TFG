@@ -11,6 +11,7 @@ class DiceLoss(nn.Module):
 
 		# logits [N, C, H, W]
 		# target [N, H, W]
+
 		
 		prob = F.softmax(logits, dim=1) # [N, C, H, W]
 		num_classes = logits.size(1)  # Number of classes (C)
@@ -35,11 +36,18 @@ class FocalLoss(nn.Module):
 		super(FocalLoss, self).__init__()
 		self.gamma=gamma
 
-	def forward(self, logits, target):
+	def forward(self, logits, target, metric=None):
 
 		# logits [N, C, H, W]
 		# target [N, H, W]
-				
+		# alpha [C]
+
+		if metric == None:
+			alpha_term = 1.0
+		else:
+			alpha = -alpha.log()
+			alpha_term = alpha[target]
+
 		# Compute standard cross-entropy
 		ce = F.cross_entropy(logits, target, reduction='none')# [N, H, W]
 		
@@ -47,7 +55,7 @@ class FocalLoss(nn.Module):
 		pt = (-ce).exp()
 
 		# apply the Focal scaling factor
-		focal_term = (1 - pt)**self.gamma
+		focal_term = alpha_term * (1 - pt)**self.gamma
 		loss = focal_term * ce
 
 		return loss.mean()

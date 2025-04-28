@@ -76,11 +76,11 @@ if __name__ == "__main__":
 			redux=2**args.redux
 		).to(device)
 	
-	if args.loss == 'Cross':
+	if args.loss.lower() == 'Cross':
 		criterion = nn.CrossEntropyLoss()
-	elif args.loss == 'Dice':
+	elif args.loss.lower() == 'Dice':
 		criterion = DiceLoss()
-	elif args.loss == 'Focal':
+	elif args.loss.lower() == 'Focal':
 		criterion = FocalLoss()
 	else:
 		print('Options: Cross, Dice, Focal')

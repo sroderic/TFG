@@ -26,13 +26,19 @@ class Metrics():
 
 		self.conf_matrix += conf
 
-
-	def get_metrics(self):
-		
+	
+	def _get_conf_matrix_values(self):
 		tp = np.diag(self.conf_matrix)
 		fp = np.sum(self.conf_matrix, 0) - tp
 		fn = np.sum(self.conf_matrix, 1) - tp
 		tn = np.sum(self.conf_matrix) - tp - fp - fn
+
+		return tp, tn, fp, fn
+	
+
+	def get_metrics(self):
+		
+		tp, tn, fp, fn =self._get_conf_matrix_values()
 
 		with np.errstate(divide='ignore', invalid='ignore'):
 			metrics = {
@@ -49,3 +55,9 @@ class Metrics():
 			}
 
 		return metrics
+	
+	def get_iou(self):
+		
+		tp, _, fp, fn =self._get_conf_matrix_values()
+
+		return tp / (tp + fp + fn)
