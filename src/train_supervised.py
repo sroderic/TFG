@@ -56,7 +56,7 @@ def train_model(model, train_loader, val_loader, criterion, optimizer, epochs, m
 		avg_train_loss, epoch_metrics = train_one_epoch(model, train_loader, criterion, optimizer, metrics, device)
 
 		print(f"   🟢 Train Loss: {avg_train_loss:.4f} -- Elapsed: {datetime.timedelta(seconds=time.time()-start_training)}")
-		print(f"   🔵 IoU       : {np.nanmean(epoch_metrics['iou']):4f}")
+		print(f"   🔵 IoU       : {np.nanmean(epoch_metrics['iou'][1:8]):4f}")
 
 		# Validation	
 		val_loss = 0.
@@ -78,7 +78,7 @@ def train_model(model, train_loader, val_loader, criterion, optimizer, epochs, m
 		epoch_metrics['epoch'] = epoch + 1
 		epoch_metrics['train_loss'] = avg_train_loss
 		epoch_metrics['val_loss'] = avg_train_loss
-		val_iou = np.nanmean(epoch_metrics['iou'])
+		val_iou = np.nanmean(epoch_metrics['iou'][1:8])
 		training_metrics.append(epoch_metrics)
 		# writer.add_scalar('Loss/training', avg_train_loss, epoch + 1)
 		# writer.add_scalar("Loss/validation", avg_val_loss, epoch + 1)
@@ -88,12 +88,12 @@ def train_model(model, train_loader, val_loader, criterion, optimizer, epochs, m
 
 
 		print(f"   🔵 Val Loss : {avg_val_loss:.4f} -- Elapsed: {datetime.timedelta(seconds=time.time()-start_training)}")
-		print(f"   🔵 accuracy : {np.nanmean(epoch_metrics['accuracy']):4f}. Class: {np.array2string(epoch_metrics['accuracy'], precision=4, separator=', ')}")
-		print(f"   🔵 precision: {np.nanmean(epoch_metrics['precision']):4f}. Class: {np.array2string(epoch_metrics['precision'], precision=4, separator=', ')}")
-		print(f"   🔵 recall   : {np.nanmean(epoch_metrics['recall']):4f}. Class: {np.array2string(epoch_metrics['recall'], precision=4, separator=', ')}")
-		print(f"   🔵 f1       : {np.nanmean(epoch_metrics['f1']):4f}. Class: {np.array2string(epoch_metrics['f1'], precision=4, separator=', ')}")
-		print(f"   🔵 IoU      : {val_iou:4f}. Class: {np.array2string(epoch_metrics['iou'], precision=4, separator=', ')}")
-		print(f"   🔵 Dice     : {np.nanmean(epoch_metrics['dice']):4f}. Class: {np.array2string(epoch_metrics['dice'], precision=4, separator=', ')}")
+		print(f"   🔵 accuracy : {np.nanmean(epoch_metrics['accuracy'][1:8]):4f}. Class: {np.array2string(epoch_metrics['accuracy'][1:8], precision=4, separator=', ')}")
+		print(f"   🔵 precision: {np.nanmean(epoch_metrics['precision'][1:8]):4f}. Class: {np.array2string(epoch_metrics['precision'][1:8], precision=4, separator=', ')}")
+		print(f"   🔵 recall   : {np.nanmean(epoch_metrics['recall'][1:8]):4f}. Class: {np.array2string(epoch_metrics['recall'][1:8], precision=4, separator=', ')}")
+		print(f"   🔵 f1       : {np.nanmean(epoch_metrics['f1'][1:8]):4f}. Class: {np.array2string(epoch_metrics['f1'][1:8], precision=4, separator=', ')}")
+		print(f"   🔵 IoU      : {val_iou:4f}. Class: {np.array2string(epoch_metrics['iou'][1:8], precision=4, separator=', ')}")
+		print(f"   🔵 Dice     : {np.nanmean(epoch_metrics['dice'][1:8]):4f}. Class: {np.array2string(epoch_metrics['dice'][1:8], precision=4, separator=', ')}")
 
 		experiment_folder = checkpoints_folder / f"{experiment}"
 		experiment_folder.mkdir(exist_ok=True)
