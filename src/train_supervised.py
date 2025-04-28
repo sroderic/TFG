@@ -88,12 +88,12 @@ def train_model(model, train_loader, val_loader, criterion, optimizer, epochs, m
 
 
 		print(f"   🔵 Val Loss : {avg_val_loss:.4f} -- Elapsed: {datetime.timedelta(seconds=time.time()-start_training)}")
-		print(f"   🔵 accuracy : {np.nanmean(epoch_metrics['accuracy']):4f}")
-		print(f"   🔵 precision: {np.nanmean(epoch_metrics['precision']):4f}")
-		print(f"   🔵 recall   : {np.nanmean(epoch_metrics['recall']):4f}")
-		print(f"   🔵 f1       : {np.nanmean(epoch_metrics['f1']):4f}")
-		print(f"   🔵 IoU      : {val_iou:4f}")
-		print(f"   🔵 Dice     : {np.nanmean(epoch_metrics['dice']):4f}")
+		print(f"   🔵 accuracy : {np.nanmean(epoch_metrics['accuracy']):4f}. Class: {epoch_metrics['accuracy']:4f}")
+		print(f"   🔵 precision: {np.nanmean(epoch_metrics['precision']):4f}. Class: {epoch_metrics['precision']:4f}")
+		print(f"   🔵 recall   : {np.nanmean(epoch_metrics['recall']):4f}. Class: {epoch_metrics['recall']:4f}")
+		print(f"   🔵 f1       : {np.nanmean(epoch_metrics['f1']):4f}. Class: {epoch_metrics['f1']:4f}")
+		print(f"   🔵 IoU      : {val_iou:4f}. Class: {epoch_metrics['iou']:4f}")
+		print(f"   🔵 Dice     : {np.nanmean(epoch_metrics['dice']):4f}. Class: {epoch_metrics['dice']:4f}")
 
 				
 		# Save best model
