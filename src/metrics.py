@@ -59,5 +59,6 @@ class Metrics():
 	def get_iou(self):
 		
 		tp, _, fp, fn =self._get_conf_matrix_values()
-
-		return tp / (tp + fp + fn)
+		with np.errstate(divide='ignore', invalid='ignore'):
+			iou = tp / (tp + fp + fn)
+		return iou

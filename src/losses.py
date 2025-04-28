@@ -45,7 +45,8 @@ class FocalLoss(nn.Module):
 		if metric == None:
 			alpha_term = 1.0
 		else:
-			alpha = -alpha.log()
+			metric = metric + 1e-7
+			alpha = -metric.log()
 			alpha_term = alpha[target]
 
 		# Compute standard cross-entropy
