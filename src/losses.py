@@ -63,3 +63,25 @@ class FocalLoss(nn.Module):
 	def set_alpha(self, alpha):
 		print('New alpha:', alpha)
 		self.alpha = alpha
+
+class WeightedLoss(nn.Module):
+	def __init__(self):
+		super(WeightedLoss, self).__init__()
+
+	def forward(self, logits, target):
+
+		# logits [N, C, H, W]
+		# target [N, H, W]
+		# alpha [C]
+
+		# Compute standard cross-entropy
+		ce = F.cross_entropy(logits, target, reduction='none')# [N, H, W]
+		
+		# Extract pt (CE = -log(pt) -> pt = exp(-CE))
+		pt = (-ce).exp()
+
+		# apply the Focal scaling factor
+		weight_term = -(pt + 1e-7).log() / torch.tensor(100).log()
+		loss = weight_term * ce
+
+		return loss.mean()
