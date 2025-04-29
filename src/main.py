@@ -78,14 +78,19 @@ if __name__ == "__main__":
 	
 	if args.loss.lower() == 'cross':
 		criterion = nn.CrossEntropyLoss()
-	elif args.loss.lower() == 'dice':
-		criterion = DiceLoss()
 	elif args.loss.lower() == 'focal':
 		criterion = FocalLoss()
 	else:
-		print('Options: Cross, Dice, Focal')
+		print('Options: Cross, Focal')
 		exit()
-	optimizer = optim.Adam(model.parameters(), lr=args.learning_rate)
+	
+	if args.optimizer.lower() == 'adam':
+		optimizer = optim.Adam(model.parameters(), lr=args.learning_rate)
+	elif args.loptimizer.lower() == 'sgd':
+		optimizer = optim.SGD(params=model.parameters, lr=args.learning_rate, momentum=0.99)
+	else:
+		print('Options: Adam, SGD')
+		exit()
 	metrics = Metrics(num_classes)
 
 	train_model(

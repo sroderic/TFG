@@ -32,7 +32,7 @@ class DiceLoss(nn.Module):
 	
 
 class FocalLoss(nn.Module):
-	def __init__(self, gamma=0, alpha = 1):
+	def __init__(self, gamma=2.0, alpha = 1.0):
 		super(FocalLoss, self).__init__()
 		self.gamma = gamma
 		self.alpha = alpha

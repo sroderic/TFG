@@ -16,7 +16,7 @@ def get_arguments():
 	parser.add_argument('--batch_size', type=int, default=32)
 	parser.add_argument('--learning_rate' , '-lr', type=float, required=True)
 	parser.add_argument('--loss', type=str, required=True, help='Cross, Dice, Focal')
-	# parser.add_argument('--optimizer', type=str, default='Adam', help='Adam, RMSprop, SGD')
+	parser.add_argument('--optimizer', type=str, required=True, help='Adam, SGD')
 	parser.add_argument('--name', type=str, required=True, help='Name of the experiment')	
 
 	return parser.parse_args()
