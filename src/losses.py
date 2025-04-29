@@ -32,21 +32,21 @@ class DiceLoss(nn.Module):
 	
 
 class FocalLoss(nn.Module):
-	def __init__(self, gamma=2.0):
+	def __init__(self, gamma=0, alpha = 1):
 		super(FocalLoss, self).__init__()
-		self.gamma=gamma
+		self.gamma = gamma
+		self.alpha = alpha
 
-	def forward(self, logits, target, metric=None):
+	def forward(self, logits, target):
 
 		# logits [N, C, H, W]
 		# target [N, H, W]
 		# alpha [C]
 
-		if metric == None:
-			alpha_term = 1.0
+		if isinstance(self.alpha, torch.Tensor):
+			alpha_term = self.alpha[target]
 		else:
-			alpha = (1-metric**2)
-			alpha_term = alpha[target]
+			alpha_term = self.alpha
 
 		# Compute standard cross-entropy
 		ce = F.cross_entropy(logits, target, reduction='none')# [N, H, W]
@@ -60,3 +60,6 @@ class FocalLoss(nn.Module):
 
 		return loss.mean()
 	
+	def set_alpha(self, alpha):
+		print('New alpha:', alpha)
+		self.alpha = alpha
