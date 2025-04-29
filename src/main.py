@@ -8,7 +8,7 @@ from torch import nn, optim
 
 from dataset import HAM10000Dataset
 from model import UNet
-from losses import DiceLoss, FocalLoss
+from losses import DiceLoss, FocalLoss, WeightedLoss
 from metrics import Metrics
 from train_supervised import train_model
 
@@ -80,14 +80,16 @@ if __name__ == "__main__":
 		criterion = nn.CrossEntropyLoss()
 	elif args.loss.lower() == 'focal':
 		criterion = FocalLoss()
+	elif args.loss.lower() == 'weighted':
+		criterion = WeightedLoss()
 	else:
 		print('Options: Cross, Focal')
 		exit()
 	
 	if args.optimizer.lower() == 'adam':
 		optimizer = optim.Adam(model.parameters(), lr=args.learning_rate)
-	elif args.loptimizer.lower() == 'sgd':
-		optimizer = optim.SGD(params=model.parameters, lr=args.learning_rate, momentum=0.99)
+	elif args.optimizer.lower() == 'sgd':
+		optimizer = optim.SGD(params=model.parameters(), lr=args.learning_rate, momentum=0.99)
 	else:
 		print('Options: Adam, SGD')
 		exit()
