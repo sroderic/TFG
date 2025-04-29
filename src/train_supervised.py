@@ -18,11 +18,7 @@ def train_one_epoch(model, train_loader, criterion, optimizer, metrics, device):
 		logits = model(images) # [N, C, H, W]
 
 		# Loss computation
-		criterion_name = type(criterion).__name__.lower()
-		if 'focal' in criterion_name:
-			loss = criterion(logits, target, torch.from_numpy(iou).to(device))
-		else:
-			loss = criterion(logits, target)
+		loss = criterion(logits, target)
 
 		# Back propagation
 		optimizer.zero_grad()
