@@ -35,10 +35,10 @@ def train_one_epoch(model, train_loader, criterion, optimizer, metrics, device):
 
 	return running_loss / len(train_loader), epoch_metrics
 
-def train_model(model, train_loader, val_loader, criterion, optimizer, epochs, metrics, save_folder, experiment, device):
+def train_model(model, train_loader, val_loader, criterion, optimizer, epochs, metrics, save_folder,name, experiment, device):
 	checkpoints_folder = save_folder / 'checkpoints'
 	checkpoints_folder.mkdir(exist_ok=True)
-	logs_folder = save_folder / 'logs'
+	logs_folder = save_folder / 'logs' / f'{name}'
 	logs_folder.mkdir(exist_ok=True)
 
 	# To save the best model

@@ -104,6 +104,7 @@ if __name__ == "__main__":
 		epochs=args.epochs,
 		metrics=metrics,
 		save_folder= save_folder,
-		experiment=args.name.lower(),
+		name=args.name.lower(),
+		experiment=args.experiment.lower(),
 		device= device 
 	)
