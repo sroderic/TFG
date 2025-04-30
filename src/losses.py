@@ -31,6 +31,49 @@ class DiceLoss(nn.Module):
 		return dice_loss
 	
 
+class FpFocalLoss(nn.Module):
+	def __init__(self, gamma=2.0, alpha = 1.0):
+		super(FpFocalLoss, self).__init__()
+		self.gamma = gamma
+		self.alpha = alpha
+
+	def forward(self, logits, target):
+
+		# logits [N, C, H, W]
+		# target [N, H, W]
+		# alpha [C]
+
+		if isinstance(self.alpha, torch.Tensor):
+			alpha_term = self.alpha[target]
+		else:
+			alpha_term = self.alpha
+
+		# Compute standard cross-entropy
+		ce = F.cross_entropy(logits, target, reduction='none')# [N, H, W]
+		
+		# Extract pt (CE = -log(pt) -> pt = exp(-CE))
+		pt = (-ce).exp()
+
+		# apply the Focal scaling factor
+		focal_term = alpha_term * (1. - pt)**self.gamma
+		focal_loss = focal_term * ce
+
+		# Compute false-positive penalty for background (class 0)
+		p = F.softmax(logits, dim=1)  # [N, C, H, W]
+		p_bg = p[:, 0, :, :]  # probability of background class
+
+		# Penalize when ground truth is NOT background
+		non_bg_mask = (target != 0).type_as(p_bg)  # [N, H, W]
+		fp_penalty = -(1. - p_bg).log() * non_bg_mask  # squared prob for smoothness
+
+		loss = focal_loss + fp_penalty
+
+		return loss.mean()
+	
+	def set_alpha(self, alpha):
+		print('New alpha:', alpha)
+		self.alpha = alpha
+
 class FocalLoss(nn.Module):
 	def __init__(self, gamma=2.0, alpha = 1.0):
 		super(FocalLoss, self).__init__()
