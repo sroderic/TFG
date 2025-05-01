@@ -24,7 +24,7 @@ if __name__ == "__main__":
 	np.random.seed(seed)
 	torch.manual_seed(seed)
 	# torch.backends.cudnn.deterministic = True
-	torch.use_deterministic_algorithms(True)
+	torch.use_deterministic_algorithms(mode=True, warn_only=True)
 	torch.backends.cudnn.benchmark = False
 
 	device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -102,10 +102,14 @@ if __name__ == "__main__":
 	
 	if args.loss.lower() == 'cross':
 		criterion = nn.CrossEntropyLoss()
-	elif args.loss.lower() == 'focal':
-		criterion = FocalLoss()
 	elif args.loss.lower() == 'fp':
 		criterion = FpFocalLoss()
+	elif args.loss.lower() == 'focal0':
+		criterion = FpFocalLoss(gamma=0.)
+	elif args.loss.lower() == 'focal2':
+		criterion = FocalLoss(gamma=2.)
+	elif args.loss.lower() == 'focal3':
+		criterion = FocalLoss(gamma=3.)
 	else:
 		print('Options: Cross, Focal, Fp')
 		exit()
