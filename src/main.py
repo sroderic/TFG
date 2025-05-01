@@ -5,10 +5,12 @@ import os
 import torch
 from torch.utils.data import DataLoader
 from torch import nn, optim
+import random
+import numpy as np
 
 from dataset import HAM10000Dataset
 from model import UNet
-from losses import DiceLoss, FocalLoss, WeightedLoss
+from losses import FocalLoss, FpFocalLoss
 from metrics import Metrics
 from train_supervised import train_model
 
@@ -16,6 +18,15 @@ from train_supervised import train_model
 args = get_arguments()
 
 if __name__ == "__main__":
+
+	seed = 42
+	random.seed(seed)
+	np.random.seed(seed)
+	torch.manual_seed(seed)
+	# torch.backends.cudnn.deterministic = True
+	torch.use_deterministic_algorithms()
+	torch.backends.cudnn.benchmark = False
+
 	device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 	# Data folders
 	if args.colab:
@@ -76,14 +87,27 @@ if __name__ == "__main__":
 			redux=2**args.redux
 		).to(device)
 	
+	base_model_path = save_folder / 'checkpoints' / f'untrained_{args.name.lower()}.pth'
+	if base_model_path.exists():
+		model.load_state_dict(
+			torch.load(
+				base_model_path,
+				weights_only=False,
+				map_location=device
+			)
+		)
+	else:
+		# Save base untrained model
+		torch.save(model.state_dict(), base_model_path)
+	
 	if args.loss.lower() == 'cross':
 		criterion = nn.CrossEntropyLoss()
 	elif args.loss.lower() == 'focal':
 		criterion = FocalLoss()
-	elif args.loss.lower() == 'weighted':
-		criterion = WeightedLoss()
+	elif args.loss.lower() == 'fp':
+		criterion = FpFocalLoss()
 	else:
-		print('Options: Cross, Focal')
+		print('Options: Cross, Focal, Fp')
 		exit()
 	
 	if args.optimizer.lower() == 'adam':
