@@ -10,7 +10,7 @@ import numpy as np
 
 from dataset import HAM10000Dataset
 from model import UNet
-from losses import DiceLoss, FocalLoss, FpFocalLoss
+from losses import DiceLoss, FocalLoss, FpFocalLoss, JaccardLoss, LogCoshDiceLoss
 from metrics import Metrics
 from train_supervised import train_model
 
@@ -110,8 +110,10 @@ if __name__ == "__main__":
 		criterion = FocalLoss(gamma=2.)
 	elif args.loss.lower() == 'focal3':
 		criterion = FocalLoss(gamma=3.)
-	elif args.loss.lower() == 'fp':
-		criterion = FpFocalLoss()
+	elif args.loss.lower() == 'jaccard':
+		criterion = JaccardLoss()
+	elif args.loss.lower() == 'logcosh':
+		criterion = LogCoshDiceLoss()
 	else:
 		print('Options: Cross, Focal, Fp')
 		exit()
