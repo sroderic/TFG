@@ -210,8 +210,8 @@ class RecallCrossEntropy(torch.nn.Module):
 		fn_idx, fn_count = torch.unique(fn,return_counts=True)
 		
 		# map ignored label to an exisiting one
-		fn_count[fn_idx==self.ignore_index] = fn_count[1]
-		fn_idx[fn_idx==self.ignore_index] = 1 
+		# fn_count[fn_idx==self.ignore_index] = fn_count[1]
+		# fn_idx[fn_idx==self.ignore_index] = 1 
 		fn_counter[fn_idx] = fn_count.float()
 		weight = fn_counter / gt_counter
 		
