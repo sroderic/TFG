@@ -10,7 +10,7 @@ import numpy as np
 
 from dataset import HAM10000Dataset
 from model import UNet
-from losses import DiceLoss, FocalLoss, FpFocalLoss, JaccardLoss, LogCoshDiceLoss
+from losses import DiceLoss, FocalLoss, FpFocalLoss, JaccardLoss, LogCoshDiceLoss, RecallCrossEntropy
 from metrics import Metrics
 from train_supervised import train_model
 
@@ -114,8 +114,10 @@ if __name__ == "__main__":
 		criterion = JaccardLoss()
 	elif args.loss.lower() == 'logcosh':
 		criterion = LogCoshDiceLoss()
+	elif args.loss.lower() == 'recall':
+		criterion = RecallCrossEntropy()
 	else:
-		print('Options: Cross, Focal, Fp')
+		print('Options: Cross, Dice, Focal0, Focal2, Focal3, Jaccard, LogCosh, Recall')
 		exit()
 	
 	if args.optimizer.lower() == 'adam':
