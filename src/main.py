@@ -10,7 +10,7 @@ import numpy as np
 
 from dataset import HAM10000Dataset
 from model import UNet
-from losses import DiceLoss, FocalLoss, JaccardLoss, RecallCrossEntropy
+from losses import ComboDiceLoss, DiceLoss, FocalLoss, JaccardLoss, RecallCrossEntropy
 from metrics import Metrics
 from train_supervised import train_model
 
@@ -100,20 +100,21 @@ if __name__ == "__main__":
 		# Save base untrained model
 		torch.save(model.state_dict(), base_model_path)
 	
-	if args.loss.lower() == 'cross':
+
+	if args.loss.lower() == 'combo':
+		criterion = ComboDiceLoss()
+	elif args.loss.lower() == 'cross':
 		criterion = nn.CrossEntropyLoss()
 	elif args.loss.lower() == 'dice':
 		criterion = DiceLoss()
 	elif args.loss.lower() == 'focal0':
-		criterion = FpFocalLoss(gamma=0.)
+		criterion = FocalLoss(gamma=0.)
 	elif args.loss.lower() == 'focal2':
 		criterion = FocalLoss(gamma=2.)
 	elif args.loss.lower() == 'focal3':
 		criterion = FocalLoss(gamma=3.)
 	elif args.loss.lower() == 'jaccard':
 		criterion = JaccardLoss()
-	elif args.loss.lower() == 'logcosh':
-		criterion = LogCoshDiceLoss()
 	elif args.loss.lower() == 'recall':
 		criterion = RecallCrossEntropy()
 	else:

@@ -2,6 +2,38 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+class ComboDiceLoss(nn.Module):
+	def __init__(self, smooth = 1.0):
+		super(ComboDiceLoss, self).__init__()
+		self.smooth = smooth
+
+	def forward(self, logits, target):
+
+		# logits [N, C, H, W]
+		# target [N, H, W]
+
+		
+		prob = F.softmax(logits, dim=1) # [N, C, H, W]
+		num_classes = logits.size(1)  # Number of classes (C)
+		prob = prob.permute(0, 2, 3, 1).contiguous().view(-1, num_classes)
+		target = target.view(-1)
+		
+		dice = []
+		for c in range(num_classes):
+			target_c = (target == c).float()
+			prob_c = prob[:, c]
+			
+			intersection = (prob_c * target_c).sum()
+			dice_c = (2.*intersection + self.smooth)/(prob_c.sum() + target_c.sum() + self.smooth)
+			dice.append(dice_c)
+		dice =  torch.stack(dice)
+		dice_loss = 1 - dice.mean()
+
+		ce = F.cross_entropy(logits, target)# [N, H, W]
+
+		return dice_loss + ce
+
+
 class DiceLoss(nn.Module):
 	def __init__(self, smooth = 1.0):
 		super(DiceLoss, self).__init__()
@@ -29,6 +61,7 @@ class DiceLoss(nn.Module):
 		dice =  torch.stack(dice)
 		dice_loss = 1 - dice.mean()
 		return dice_loss
+	
 	
 class JaccardLoss(nn.Module):
 	def __init__(self, smooth = 1.0):
