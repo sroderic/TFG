@@ -104,7 +104,7 @@ if __name__ == "__main__":
 	if args.loss.lower() == 'combo':
 		criterion = ComboDiceLoss()
 	elif args.loss.lower() == 'cross':
-		criterion = nn.CrossEntropyLoss()
+		criterion = nn.CrossEntropyLoss(ignore_index=0)
 	elif args.loss.lower() == 'dice':
 		criterion = DiceLoss()
 	elif args.loss.lower() == 'focal0':
