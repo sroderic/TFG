@@ -10,7 +10,7 @@ import numpy as np
 
 from dataset import HAM10000Dataset
 from model import UNet
-from losses import DiceLoss, FocalLoss, FpFocalLoss, JaccardLoss, LogCoshDiceLoss, RecallCrossEntropy
+from losses import DiceLoss, FocalLoss, JaccardLoss, RecallCrossEntropy
 from metrics import Metrics
 from train_supervised import train_model
 
