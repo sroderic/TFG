@@ -12,7 +12,10 @@ class ComboDiceLoss(nn.Module):
 		# logits [N, C, H, W]
 		# target [N, H, W]
 
+		# Cross entropy loss
+		ce = F.cross_entropy(logits, target)
 		
+
 		prob = F.softmax(logits, dim=1) # [N, C, H, W]
 		num_classes = logits.size(1)  # Number of classes (C)
 		prob = prob.permute(0, 2, 3, 1).contiguous().view(-1, num_classes)
@@ -28,8 +31,6 @@ class ComboDiceLoss(nn.Module):
 			dice.append(dice_c)
 		dice =  torch.stack(dice)
 		dice_loss = 1 - dice.mean()
-
-		ce = F.cross_entropy(logits, target)# [N, H, W]
 
 		return dice_loss + ce
 
