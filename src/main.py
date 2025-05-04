@@ -52,7 +52,6 @@ if __name__ == "__main__":
 	dataset_folder = data_folder / 'sl'
 
 	# Get datasets
-	image_size = (args.width*450//600, args.width)
 	train_dataset = HAM10000Dataset(
 		df_train,
 		dataset_folder,

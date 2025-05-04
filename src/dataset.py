@@ -9,7 +9,7 @@ class HAM10000Dataset(Dataset):
 	def __init__(self, df, data_folder):
 		self.df = df
 		self.images_folder = data_folder / 'images'
-		self.masks_folder = data_folder / 'semantic_segmentations'
+		self.masks_folder = data_folder / 'masks'
 
 		self.image_transform = transforms.Compose([
 			# transforms.Resize(self.image_size),
