@@ -49,17 +49,17 @@ if __name__ == "__main__":
 	df_val = dataset_info['df_val']
 	class_to_int = dataset_info['class_to_int']
 
+	dataset_folder = data_folder / 'sl'
+
 	# Get datasets
 	image_size = (args.width*450//600, args.width)
 	train_dataset = HAM10000Dataset(
 		df_train,
-		data_folder,
-		image_size,
+		dataset_folder,
 	)
 	val_dataset = HAM10000Dataset(
 		df_val,
-		data_folder,
-		image_size,
+		dataset_folder,
 	)
 
 	# Get dataloaders
@@ -104,7 +104,7 @@ if __name__ == "__main__":
 	if args.loss.lower() == 'combo':
 		criterion = ComboDiceLoss()
 	elif args.loss.lower() == 'cross':
-		criterion = nn.CrossEntropyLoss(ignore_index=0)
+		criterion = nn.CrossEntropyLoss()
 	elif args.loss.lower() == 'dice':
 		criterion = DiceLoss()
 	elif args.loss.lower() == 'focal0':

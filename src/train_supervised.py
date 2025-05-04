@@ -92,7 +92,7 @@ def train_model(model, train_loader, val_loader, criterion, optimizer, epochs, m
 		writer.add_scalar("IoU", val_iou, epoch + 1)
 
 
-		print(f"   🔵 Val Loss : {avg_val_loss:.4f} -- Elapsed: {datetime.timedelta(seconds=time.time()-start_training)}")
+		print(f"   🟢 Val Loss : {avg_val_loss:.4f} -- Elapsed: {datetime.timedelta(seconds=time.time()-start_training)}")
 		print(f"   🔵 accuracy : {np.nanmean(epoch_metrics['accuracy'][1:8]):4f}. Class: {np.array2string(epoch_metrics['accuracy'][1:8], precision=4, separator=', ')}")
 		print(f"   🔵 precision: {np.nanmean(epoch_metrics['precision'][1:8]):4f}. Class: {np.array2string(epoch_metrics['precision'][1:8], precision=4, separator=', ')}")
 		print(f"   🔵 recall   : {np.nanmean(epoch_metrics['recall'][1:8]):4f}. Class: {np.array2string(epoch_metrics['recall'][1:8], precision=4, separator=', ')}")
