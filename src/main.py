@@ -1,4 +1,4 @@
-from args import get_arguments
+import args
 from pathlib import Path
 import pickle
 import os
@@ -8,6 +8,7 @@ from torch import nn, optim
 import random
 import numpy as np
 
+from utils import set_arguments, get_dataset_info
 from dataset import HAM10000Dataset
 from model import UNet
 from losses import ComboDiceLoss, DiceLoss, FocalLoss, JaccardLoss, RecallCrossEntropy
@@ -15,41 +16,48 @@ from metrics import Metrics
 from train_supervised import train_model
 
 # Get the arguments
-args = get_arguments()
+set_arguments()
 
 if __name__ == "__main__":
 
-	seed = 42
-	random.seed(seed)
-	np.random.seed(seed)
-	torch.manual_seed(seed)
+
+	random.seed(args.seed)
+	np.random.seed(args.seed)
+	torch.manual_seed(args.seed)
 	# torch.backends.cudnn.deterministic = True
 	torch.use_deterministic_algorithms(mode=True, warn_only=True)
 	torch.backends.cudnn.benchmark = False
 
-	device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+	args.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+	
 	# Data folders
 	if args.colab:
 		root_path = Path('/content/TFG')
-		save_folder = Path('/content/drive/MyDrive/TFG')
+		args.save_folder = Path('/content/drive/MyDrive/TFG')
 	else:
 		root_path = Path.home() / 'Documents' / 'TFG'
-		save_folder = root_path
+		args.save_folder = root_path
 	
-	data_folder = root_path / 'data'
 	root_path.mkdir(exist_ok=True)
-	save_folder.mkdir(exist_ok=True)
-	
-	# Get dataset info
-	dataset_info_path = data_folder / 'dataset_info.pkl'
-	with open(dataset_info_path, 'rb') as f:
-		dataset_info = pickle.load(f)
+	args.save_folder.mkdir(exist_ok=True)
+	args.data_folder = root_path / 'data'
 
+	# Get dataset info
+	dataset_info_folder = args.save_folder / 'data' / 'ham10000'
+	dataset_info_file = dataset_info_folder/ f'dataset_info_{args.seed}.pkl' # Nom depenent de la llavor, ha de contenir int_to_class i df_test/df_val. Si no existeix, s'ha de generar amb la llavor
+	if dataset_info_file.exists():
+		with open(dataset_info_file, 'rb') as f:
+			dataset_info = pickle.load(f)
+	else:
+		dataset_info = get_dataset_info(dataset_info_folder, args.seed)
+		with open(dataset_info_file, "wb") as f:
+			pickle.dump(dataset_info, f)
+	
 	df_train = dataset_info['df_train']
 	df_val = dataset_info['df_val']
 	class_to_int = dataset_info['class_to_int']
 
-	dataset_folder = data_folder / 'sl'
+	dataset_folder = args.data_folder / 'sl'
 
 	# Get datasets
 	train_dataset = HAM10000Dataset(
@@ -69,6 +77,7 @@ if __name__ == "__main__":
 		shuffle=True,
 		num_workers=num_workers,
 	)
+	
 	val_loader = DataLoader(
 		val_dataset,
 		batch_size=args.batch_size,
@@ -83,16 +92,18 @@ if __name__ == "__main__":
 	model = UNet(
 			in_channels=in_channels,
 			num_classes=num_classes,
-			redux=2**args.redux
-		).to(device)
+			features=args.features
+		).to(args.device)
 	
-	base_model_path = save_folder / 'checkpoints' / f'untrained_{args.name.lower()}.pth'
+	base_model_path = args.save_folder / 'checkpoints' / f'UNet{args.features}_{args.seed}' / 'untrained.pth'
+
+	
 	if base_model_path.exists():
 		model.load_state_dict(
 			torch.load(
 				base_model_path,
 				weights_only=False,
-				map_location=device
+				map_location=args.device
 			)
 		)
 	else:
@@ -136,9 +147,5 @@ if __name__ == "__main__":
 		criterion= criterion,
 		optimizer= optimizer,
 		epochs=args.epochs,
-		metrics=metrics,
-		save_folder= save_folder,
-		name=args.name.lower(),
-		experiment=args.experiment.lower(),
-		device= device 
+		metrics=metrics
 	)

@@ -1,3 +1,4 @@
+import args
 import time
 import datetime
 from tqdm import tqdm
@@ -7,12 +8,12 @@ import numpy as np
 
 from torch.utils.tensorboard import SummaryWriter
 
-def train_one_epoch(model, train_loader, criterion, optimizer, metrics, device):
+def train_one_epoch(model, train_loader, criterion, optimizer, metrics):
 	running_loss = 0.
 	metrics.reset()
 	for images, masks in tqdm(train_loader, desc=f"Training"):
-		images = images.to(device) # [N, C, H, W]
-		target = masks.long().to(device)  # [N, H, W]
+		images = images.to(args.device) # [N, C, H, W]
+		target = masks.long().to(args.device)  # [N, H, W]
 		
 		# Forward propagation
 		logits = model(images) # [N, C, H, W]
@@ -35,16 +36,19 @@ def train_one_epoch(model, train_loader, criterion, optimizer, metrics, device):
 
 	return running_loss / len(train_loader), epoch_metrics
 
-def train_model(model, train_loader, val_loader, criterion, optimizer, epochs, metrics, save_folder,name, experiment, device):
-	checkpoints_folder = save_folder / 'checkpoints'
+def train_model(model, train_loader, val_loader, criterion, optimizer, epochs, metrics):
+	checkpoints_folder = args.save_folder / 'checkpoints'
 	checkpoints_folder.mkdir(exist_ok=True)
-	logs_folder = save_folder / 'logs' / f'{name}'
+	logs_folder = args.save_folder / 'logs' / f'UNet{args.features}_{args.seed}'
+
+
 	logs_folder.mkdir(exist_ok=True)
 
 	# To save the best model
 	training_metrics = []
 	best_iou = 0.
 
+	experiment = f"{args.loss}-batch{args.batch_size}-lr{args.learning_rate}{f'-{args.experiment}' if args.experiment else ''}"
 	writer = SummaryWriter(logs_folder / f"{experiment}")
 
 	start_training = time.time()
@@ -53,7 +57,7 @@ def train_model(model, train_loader, val_loader, criterion, optimizer, epochs, m
 		
 		# Training
 		model.train()
-		avg_train_loss, epoch_metrics = train_one_epoch(model, train_loader, criterion, optimizer, metrics, device)
+		avg_train_loss, epoch_metrics = train_one_epoch(model, train_loader, criterion, optimizer, metrics, args.device)
 		# criterion_name = type(criterion).__name__.lower()
 		# if 'focal' in criterion_name:
 		# 	alpha = torch.from_numpy(epoch_metrics['iou']).to(device)
@@ -69,8 +73,8 @@ def train_model(model, train_loader, val_loader, criterion, optimizer, epochs, m
 		model = model.eval()
 		with torch.no_grad():
 			for images, masks in tqdm(val_loader, desc=f"Validation"):
-				images = images.to(device)
-				target = masks.long().to(device)  # (B, H, W)
+				images = images.to(args.device)
+				target = masks.long().to(args.device)  # (B, H, W)
 		
 				# forward
 				logits = model(images)  # (B, C, H, W)

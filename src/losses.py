@@ -1,3 +1,4 @@
+import args
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -135,18 +136,17 @@ class RecallCrossEntropy(torch.nn.Module):
 	def forward(self, logits, target): 
 		# logits [N, C, H, W]
 		# target [N, H, W]
-		device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 		n_classes = logits.size(1)
 		pred = logits.argmax(1)
 		idex = (pred != target).view(-1) 
 				
 		#calculate ground truth counts
-		gt_counter = torch.ones((n_classes,), device=device)
+		gt_counter = torch.ones((n_classes,), device=args.device)
 		gt_idx, gt_count = torch.unique(target,return_counts=True)
 		gt_counter[gt_idx] = gt_count.float()
 		
 		#calculate false negative counts
-		fn_counter = torch.ones((n_classes), device=device)
+		fn_counter = torch.ones((n_classes), device=args.device)
 		fn = target.view(-1)[idex]
 		fn_idx, fn_count = torch.unique(fn,return_counts=True)
 		fn_counter[fn_idx] = fn_count.float()
