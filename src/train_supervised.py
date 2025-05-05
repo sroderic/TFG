@@ -56,7 +56,7 @@ def train_model(model, train_loader, val_loader, criterion, optimizer, epochs, m
 		
 		# Training
 		model.train()
-		avg_train_loss, epoch_metrics = train_one_epoch(model, train_loader, criterion, optimizer, metrics, args.device)
+		avg_train_loss, epoch_metrics = train_one_epoch(model, train_loader, criterion, optimizer, metrics)
 		# criterion_name = type(criterion).__name__.lower()
 		# if 'focal' in criterion_name:
 		# 	alpha = torch.from_numpy(epoch_metrics['iou']).to(device)
