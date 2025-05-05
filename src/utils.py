@@ -63,7 +63,6 @@ def get_dataset_info(dataset_info_folder, seed):
 	for cls in classes:
 		# Es calcula el nombre d'imatges que falten per completar el 80% dessitjat al train dataset
 		missing = int(total_class_counts[cls] * 0.8 - train_class_counts[cls])
-		# print(cls, ": Missing ", missing, "images to complete")
 
 		if missing > 0:
 			# Es filtren les imatges que perteneixen a la clase a df_val
@@ -73,7 +72,7 @@ def get_dataset_info(dataset_info_folder, seed):
 			if len(temp_class_df) >= missing:
 				# Es seleccionen aleatoriament el nombre d'imatges calculades de df_val per moureles a df_train
 				selected_images = temp_class_df.sample(n=missing, random_state=seed)
-				print(selected_images)
+
 				# S'afegeixen les imatges al conjunt d'entrenament i s'eliminen del conjunt de validació
 				df_train = pd.concat([df_train, selected_images])
 				df_val = df_val.drop(selected_images.index)

@@ -46,12 +46,12 @@ class HAM10000Dataset(Dataset):
 		return self.__transform__(image_id)
 	
 	def __transform__(self, image_id):
-		image_path = self.images_folder / f"{image_id}.jpg"
-		image = Image.open(image_path).convert('RGB')
+		image_file = self.images_folder / f"{image_id}.jpg"
+		image = Image.open(image_file).convert('RGB')
 		image = self.image_transform(image)
 
-		mask_path = self.masks_folder / f"{image_id}.png"
-		mask = Image.open(mask_path).convert('L')
+		mask_file = self.masks_folder / f"{image_id}.png"
+		mask = Image.open(mask_file).convert('L')
 		mask = self.mask_transform(mask)
 
 		return image, mask.squeeze(0)

@@ -95,20 +95,23 @@ if __name__ == "__main__":
 			features=args.features
 		).to(args.device)
 	
-	base_model_path = args.save_folder / 'checkpoints' / f'UNet{args.features}_{args.seed}' / 'untrained.pth'
+	model_base_folder = args.save_folder / 'checkpoints' / f'UNet{args.features}'
+	model_base_folder.mkdir(exist_ok=True)
+	model_folder = model_base_folder / f'{args.seed}'
+	model_folder.mkdir(exist_ok=True)
+	model_file = model_folder / 'untrained.pth'
 
-	
-	if base_model_path.exists():
+	if model_file.exists():
 		model.load_state_dict(
 			torch.load(
-				base_model_path,
+				model_file,
 				weights_only=False,
 				map_location=args.device
 			)
 		)
 	else:
 		# Save base untrained model
-		torch.save(model.state_dict(), base_model_path)
+		torch.save(model.state_dict(), model_file)
 	
 
 	if args.loss.lower() == 'combo':

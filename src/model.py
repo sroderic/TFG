@@ -1,6 +1,6 @@
 import torch
 import torch.nn as nn
-from torchvision import transforms
+
 	
 class UNet(nn.Module):
 	def __init__(self, in_channels, num_classes, features):
