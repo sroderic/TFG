@@ -112,6 +112,7 @@ def train_model(model, train_loader, val_loader, criterion, optimizer, epochs, m
 			best_model_file = experiment_folder / 'best_model.pth'
 			torch.save(model.state_dict(), best_model_file)
 			print("💾 Best model saved!")
+			print(best_model_file.parent)
 		print("........................................................................")
 
 	metrics_file = experiment_folder / 'metrics.pt'

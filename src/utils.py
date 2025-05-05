@@ -29,9 +29,9 @@ def set_arguments():
 	args.epochs = parsed.epochs
 	args.batch_size = parsed.batch_size
 	args.learning_rate= parsed.learning_rate
-	args.loss= parsed.loss
-	args.optimizer = parsed.optimizer
-	args.experiment = parsed.experiment
+	args.loss= parsed.loss.lower()
+	args.optimizer = parsed.optimizer.lower()
+	args.experiment = parsed.experiment.lower()
 
 
 def get_dataset_info(dataset_info_folder, seed):

@@ -114,29 +114,29 @@ if __name__ == "__main__":
 		torch.save(model.state_dict(), model_file)
 	
 
-	if args.loss.lower() == 'combo':
+	if args.loss == 'combo':
 		criterion = ComboDiceLoss()
-	elif args.loss.lower() == 'cross':
+	elif args.loss == 'cross':
 		criterion = nn.CrossEntropyLoss()
-	elif args.loss.lower() == 'dice':
+	elif args.loss == 'dice':
 		criterion = DiceLoss()
-	elif args.loss.lower() == 'focal0':
+	elif args.loss == 'focal0':
 		criterion = FocalLoss(gamma=0.)
-	elif args.loss.lower() == 'focal2':
+	elif args.loss == 'focal2':
 		criterion = FocalLoss(gamma=2.)
-	elif args.loss.lower() == 'focal3':
+	elif args.loss == 'focal3':
 		criterion = FocalLoss(gamma=3.)
-	elif args.loss.lower() == 'jaccard':
+	elif args.loss == 'jaccard':
 		criterion = JaccardLoss()
-	elif args.loss.lower() == 'recall':
+	elif args.loss == 'recall':
 		criterion = RecallCrossEntropy()
 	else:
 		print('Options: Cross, Dice, Focal0, Focal2, Focal3, Jaccard, LogCosh, Recall')
 		exit()
 	
-	if args.optimizer.lower() == 'adam':
+	if args.optimizer == 'adam':
 		optimizer = optim.Adam(model.parameters(), lr=args.learning_rate)
-	elif args.optimizer.lower() == 'sgd':
+	elif args.optimizer == 'sgd':
 		optimizer = optim.SGD(params=model.parameters(), lr=args.learning_rate, momentum=0.99)
 	else:
 		print('Options: Adam, SGD')
