@@ -44,7 +44,7 @@ if __name__ == "__main__":
 
 	# Get dataset info
 	dataset_info_folder = args.save_folder / 'data' / 'ham10000'
-	dataset_info_file = dataset_info_folder/ f'dataset_info_{args.seed}.pkl' # Nom depenent de la llavor, ha de contenir int_to_class i df_test/df_val. Si no existeix, s'ha de generar amb la llavor
+	dataset_info_file = dataset_info_folder/ f'dataset_info_{args.seed}.pkl'
 	if dataset_info_file.exists():
 		with open(dataset_info_file, 'rb') as f:
 			dataset_info = pickle.load(f)
@@ -76,12 +76,13 @@ if __name__ == "__main__":
 		batch_size=args.batch_size,
 		shuffle=True,
 		num_workers=num_workers,
+		pin_memory=True
 	)
 	
 	val_loader = DataLoader(
 		val_dataset,
 		batch_size=args.batch_size,
-		shuffle=True,
+		shuffle=False,
 		num_workers=num_workers,
 	)
 
@@ -93,7 +94,7 @@ if __name__ == "__main__":
 			in_channels=in_channels,
 			num_classes=num_classes,
 			features=args.features
-		).to(args.device)
+		).to(dtype=torch.bfloat16, device=args.device)
 	
 	model_base_folder = args.save_folder / 'checkpoints' / f'UNet{args.features}'
 	model_base_folder.mkdir(exist_ok=True)
