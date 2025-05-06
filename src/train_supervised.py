@@ -13,7 +13,7 @@ def train_one_epoch(model, train_loader, criterion, optimizer, metrics):
 	metrics.reset()
 	for images, masks in tqdm(train_loader, desc=f"Training"):
 		images = images.to(args.device) # [N, C, H, W]
-		target = masks.long().to(args.device)  # [N, H, W]
+		target = masks.to(args.device)  # [N, H, W]
 		
 		# Forward propagation
 		logits = model(images) # [N, C, H, W]
