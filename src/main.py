@@ -86,7 +86,6 @@ if __name__ == "__main__":
 		batch_size=args.batch_size,
 		shuffle=True,
 		num_workers=num_workers,
-		pin_memory=True
 	)
 	
 	val_loader = DataLoader(
@@ -129,7 +128,7 @@ if __name__ == "__main__":
 		exit()
 	
 	if args.optimizer == 'adam':
-		optimizer = optim.Adam(model.parameters(), lr=args.learning_rate, eps = 1e-4)
+		optimizer = optim.Adam(model.parameters(), lr=args.learning_rate)
 	elif args.optimizer == 'sgd':
 		optimizer = optim.SGD(params=model.parameters(), lr=args.learning_rate, momentum=0.99)
 	else:
