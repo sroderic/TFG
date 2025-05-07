@@ -35,9 +35,9 @@ def train_one_epoch(model, train_loader, criterion, optimizer, metrics):
 
 def train_model(model, train_loader, val_loader, criterion, optimizer, epochs, metrics):
 	checkpoints_base_folder = args.save_folder / 'checkpoints' / f'UNet{args.features}'
-	checkpoints_base_folder.mkdir(exists_ok=True)
+	checkpoints_base_folder.mkdir(exist_ok=True)
 	checkpoints_folder = checkpoints_base_folder / f"{args.seed}"
-	checkpoints_folder.mkdir(exists_ok=True)
+	checkpoints_folder.mkdir(exist_ok=True)
 	
 	logs_base_folder = args.save_folder / 'logs' / f'UNet{args.features}'
 	logs_base_folder.mkdir(exist_ok=True)
