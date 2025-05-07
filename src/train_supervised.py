@@ -34,7 +34,11 @@ def train_one_epoch(model, train_loader, criterion, optimizer, metrics):
 	return running_loss / len(train_loader), epoch_metrics
 
 def train_model(model, train_loader, val_loader, criterion, optimizer, epochs, metrics):
-	checkpoints_folder = args.save_folder / 'checkpoints' / f'UNet{args.features}' / f"{args.seed}" 
+	checkpoints_base_folder = args.save_folder / 'checkpoints' / f'UNet{args.features}'
+	checkpoints_base_folder.mkdir(exists_ok=True)
+	checkpoints_folder = checkpoints_base_folder / f"{args.seed}"
+	checkpoints_folder.mkdir(exists_ok=True)
+	
 	logs_base_folder = args.save_folder / 'logs' / f'UNet{args.features}'
 	logs_base_folder.mkdir(exist_ok=True)
 	logs_folder = logs_base_folder / f"{args.seed}"
@@ -54,14 +58,9 @@ def train_model(model, train_loader, val_loader, criterion, optimizer, epochs, m
 		# Training
 		model.train()
 		avg_train_loss, epoch_metrics = train_one_epoch(model, train_loader, criterion, optimizer, metrics)
-		# criterion_name = type(criterion).__name__.lower()
-		# if 'focal' in criterion_name:
-		# 	alpha = torch.from_numpy(epoch_metrics['iou']).to(device)
-		#	alpha = alpha + (alpha == 0).float() * 1e-4
-		# 	alpha = -alpha.log()
-		# 	criterion.set_alpha(alpha)
+
 		print(f"   🟢 Train Loss: {avg_train_loss:.4f} -- Elapsed: {datetime.timedelta(seconds=time.time()-start_training)}")
-		print(f"   🔵 IoU       : {np.nanmean(epoch_metrics['iou'][1:8]):4f}")
+		print(f"   🔵 IoU       : {np.nanmean(epoch_metrics['iou'][0:8]):4f}")
 
 		# Validation	
 		val_loss = 0.
@@ -83,7 +82,7 @@ def train_model(model, train_loader, val_loader, criterion, optimizer, epochs, m
 		epoch_metrics['epoch'] = epoch + 1
 		epoch_metrics['train_loss'] = avg_train_loss
 		epoch_metrics['val_loss'] = avg_train_loss
-		val_iou = np.nanmean(epoch_metrics['iou'][1:8])
+		val_iou = np.nanmean(epoch_metrics['iou'][0:8])
 		training_metrics.append(epoch_metrics)
 		# writer.add_scalar('Loss/training', avg_train_loss, epoch + 1)
 		# writer.add_scalar("Loss/validation", avg_val_loss, epoch + 1)
@@ -93,12 +92,12 @@ def train_model(model, train_loader, val_loader, criterion, optimizer, epochs, m
 
 
 		print(f"   🟢 Val Loss : {avg_val_loss:.4f} -- Elapsed: {datetime.timedelta(seconds=time.time()-start_training)}")
-		print(f"   🔵 accuracy : {np.nanmean(epoch_metrics['accuracy'][1:8]):4f}. Class: {np.array2string(epoch_metrics['accuracy'][1:8], precision=4, separator=', ')}")
-		print(f"   🔵 precision: {np.nanmean(epoch_metrics['precision'][1:8]):4f}. Class: {np.array2string(epoch_metrics['precision'][1:8], precision=4, separator=', ')}")
-		print(f"   🔵 recall   : {np.nanmean(epoch_metrics['recall'][1:8]):4f}. Class: {np.array2string(epoch_metrics['recall'][1:8], precision=4, separator=', ')}")
-		print(f"   🔵 f1       : {np.nanmean(epoch_metrics['f1'][1:8]):4f}. Class: {np.array2string(epoch_metrics['f1'][1:8], precision=4, separator=', ')}")
-		print(f"   🔵 IoU      : {val_iou:4f}. Class: {np.array2string(epoch_metrics['iou'][1:8], precision=4, separator=', ')}")
-		print(f"   🔵 Dice     : {np.nanmean(epoch_metrics['dice'][1:8]):4f}. Class: {np.array2string(epoch_metrics['dice'][1:8], precision=4, separator=', ')}")
+		print(f"   🔵 accuracy : {np.nanmean(epoch_metrics['accuracy'][1:8]):4f}. Class: {np.array2string(epoch_metrics['accuracy'][0:8], precision=4, separator=', ')}")
+		print(f"   🔵 precision: {np.nanmean(epoch_metrics['precision'][1:8]):4f}. Class: {np.array2string(epoch_metrics['precision'][0:8], precision=4, separator=', ')}")
+		print(f"   🔵 recall   : {np.nanmean(epoch_metrics['recall'][1:8]):4f}. Class: {np.array2string(epoch_metrics['recall'][0:8], precision=4, separator=', ')}")
+		print(f"   🔵 f1       : {np.nanmean(epoch_metrics['f1'][1:8]):4f}. Class: {np.array2string(epoch_metrics['f1'][0:8], precision=4, separator=', ')}")
+		print(f"   🔵 IoU      : {val_iou:4f}. Class: {np.array2string(epoch_metrics['iou'][0:8], precision=4, separator=', ')}")
+		print(f"   🔵 Dice     : {np.nanmean(epoch_metrics['dice'][1:8]):4f}. Class: {np.array2string(epoch_metrics['dice'][0:8], precision=4, separator=', ')}")
 
 		experiment_folder = checkpoints_folder / f"{experiment}"
 		experiment_folder.mkdir(exist_ok=True)
