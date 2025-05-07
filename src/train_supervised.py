@@ -12,14 +12,15 @@ def train_one_epoch(model, train_loader, criterion, optimizer, metrics):
 	running_loss = 0.
 	metrics.reset()
 	for images, masks in tqdm(train_loader, desc=f"Training"):
-		images = images.to(args.device) # [N, C, H, W]
-		target = masks.to(args.device)  # [N, H, W]
+		# images = images.to(args.device) # [N, C, H, W]
+		# target = masks.to(args.device)  # [N, H, W]
 		
 		# Forward propagation
 		logits = model(images) # [N, C, H, W]
 
 		# Loss computation
-		loss = criterion(logits, target)
+		# loss = criterion(logits, target)
+		loss = criterion(logits, masks.long())
 
 		# Back propagation
 		optimizer.zero_grad()
@@ -30,7 +31,8 @@ def train_one_epoch(model, train_loader, criterion, optimizer, metrics):
 		running_loss += loss.item()
 
 		# Add metrics to epoch
-		metrics.add(logits.detach(), target.detach())
+		# metrics.add(logits.detach(), target.detach())
+		metrics.add(logits.detach(), masks)
 	
 	epoch_metrics = metrics.get_metrics()
 
@@ -112,7 +114,7 @@ def train_model(model, train_loader, val_loader, criterion, optimizer, epochs, m
 			best_model_file = experiment_folder / 'best_model.pth'
 			torch.save(model.state_dict(), best_model_file)
 			print("💾 Best model saved!")
-			print(best_model_file.parent)
+			# print(best_model_file.parent)
 		print("........................................................................")
 
 	metrics_file = experiment_folder / 'metrics.pt'

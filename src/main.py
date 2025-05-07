@@ -8,7 +8,7 @@ from torch import nn, optim
 import random
 import numpy as np
 
-from utils import set_arguments, get_dataset_info
+from utils import set_arguments, get_dataset_info, get_dataset
 from dataset import HAM10000Dataset
 from model import UNet
 from losses import ComboDiceLoss, DiceLoss, FocalLoss, JaccardLoss, RecallCrossEntropy
@@ -59,6 +59,15 @@ if __name__ == "__main__":
 
 	dataset_folder = args.data_folder / 'sl'
 
+	train_dataset = get_dataset(df_train,
+      dataset_folder)
+
+	val_dataset = get_dataset(df_val,
+		dataset_folder)
+	
+	del f, dataset_info, df_train, df_val
+
+	'''
 	# Get datasets
 	train_dataset = HAM10000Dataset(
 		df_train,
@@ -68,9 +77,10 @@ if __name__ == "__main__":
 		df_val,
 		dataset_folder,
 	)
-
+	'''
 	# Get dataloaders
-	num_workers = os.cpu_count() - 1
+	# num_workers = os.cpu_count() - 1
+	num_workers = 0
 	train_loader = DataLoader(
 		train_dataset,
 		batch_size=args.batch_size,
@@ -86,6 +96,7 @@ if __name__ == "__main__":
 		num_workers=num_workers,
 	)
 
+
 	# Get model
 	in_channels = 3
 	num_classes = len(class_to_int)
@@ -94,25 +105,7 @@ if __name__ == "__main__":
 			in_channels=in_channels,
 			num_classes=num_classes,
 			features=args.features
-		).to(dtype=torch.bfloat16, device=args.device)
-	
-	model_base_folder = args.save_folder / 'checkpoints' / f'UNet{args.features}'
-	model_base_folder.mkdir(exist_ok=True)
-	model_folder = model_base_folder / f'{args.seed}'
-	model_folder.mkdir(exist_ok=True)
-	model_file = model_folder / 'untrained.pth'
-
-	if model_file.exists():
-		model.load_state_dict(
-			torch.load(
-				model_file,
-				weights_only=False,
-				map_location=args.device
-			)
-		)
-	else:
-		# Save base untrained model
-		torch.save(model.state_dict(), model_file)
+		).to(device=args.device)
 	
 
 	if args.loss == 'combo':
@@ -136,7 +129,7 @@ if __name__ == "__main__":
 		exit()
 	
 	if args.optimizer == 'adam':
-		optimizer = optim.Adam(model.parameters(), lr=args.learning_rate)
+		optimizer = optim.Adam(model.parameters(), lr=args.learning_rate, eps = 1e-4)
 	elif args.optimizer == 'sgd':
 		optimizer = optim.SGD(params=model.parameters(), lr=args.learning_rate, momentum=0.99)
 	else:
@@ -153,3 +146,5 @@ if __name__ == "__main__":
 		epochs=args.epochs,
 		metrics=metrics
 	)
+
+# del train_loader, train_dataset, model, criterion

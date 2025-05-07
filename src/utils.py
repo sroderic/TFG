@@ -1,6 +1,12 @@
 import args
 from argparse import ArgumentParser
 import pandas as pd
+import torch
+from torchvision import transforms
+from torch.utils.data.dataset import Dataset
+from PIL import Image
+from tqdm import tqdm
+from torch.utils.data import TensorDataset
 
 def set_arguments():
 
@@ -101,3 +107,42 @@ def get_dataset_info(dataset_info_folder, seed):
 		"df_train": df_train,
 		"df_val": df_val
 	}
+
+def get_dataset(df, data_folder):
+	images_folder = data_folder / 'images'
+	masks_folder = data_folder / 'masks'
+
+	image_transform = transforms.Compose([
+		transforms.ToTensor(),
+		# transforms.ConvertImageDtype(dtype= torch.float16),
+		transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5])
+		])
+	
+	mask_transform = transforms.Compose([
+		transforms.PILToTensor()
+		])
+
+	images = []
+	masks = []
+	for _, row in tqdm(df.iterrows(), desc="Preloading dataset to memory"):
+		image_id = row['image_id']
+		
+		image_file = images_folder / f"{image_id}.jpg"
+		image = Image.open(image_file).convert('RGB')
+		image = image_transform(image)
+		image = image.to(args.device)
+		images.append(image)
+
+		mask_file = masks_folder / f"{image_id}.png"
+		mask = Image.open(mask_file).convert('L')
+		mask = mask_transform(mask)
+		mask = mask.squeeze(0).to(args.device)
+		masks.append(mask)
+	
+	images = torch.stack(images).to(device=args.device)
+	masks = torch.stack(masks).to(device=args.device)
+	
+	del images_folder, masks_folder, image_transform, mask_transform, image_id, image_file, mask_file
+
+	dataset = TensorDataset(images, masks)
+	return dataset
