@@ -12,15 +12,11 @@ def train_one_epoch(model, train_loader, criterion, optimizer, metrics):
 	running_loss = 0.
 	metrics.reset()
 	for images, masks in tqdm(train_loader, desc=f"Training"):
-		# images = images.to(args.device) # [N, C, H, W]
-		# target = masks.to(args.device)  # [N, H, W]
-		
-		# Forward propagation
-		logits = model(images) # [N, C, H, W]
-
-		# Loss computation
-		# loss = criterion(logits, target)
-		loss = criterion(logits, masks.long())
+		with torch.autocast(device_type='cuda', dtype=torch.bfloat16):
+			# Forward propagation
+			logits = model(images) # [N, C, H, W]
+			# Loss computation
+			loss = criterion(logits, masks.long())
 
 		# Back propagation
 		optimizer.zero_grad()
@@ -31,7 +27,6 @@ def train_one_epoch(model, train_loader, criterion, optimizer, metrics):
 		running_loss += loss.item()
 
 		# Add metrics to epoch
-		# metrics.add(logits.detach(), target.detach())
 		metrics.add(logits.detach(), masks)
 	
 	epoch_metrics = metrics.get_metrics()
@@ -74,14 +69,14 @@ def train_model(model, train_loader, val_loader, criterion, optimizer, epochs, m
 		model = model.eval()
 		with torch.no_grad():
 			for images, masks in tqdm(val_loader, desc=f"Validation"):
-				images = images.to(args.device)
-				target = masks.long().to(args.device)  # (B, H, W)
-		
-				# forward
-				logits = model(images)  # (B, C, H, W)
-				loss = criterion(logits, target)
+
+				with torch.autocast(device_type='cuda', dtype=torch.bfloat16):
+
+					# forward
+					logits = model(images)  # (B, C, H, W)
+					loss = criterion(logits, masks.long())
 				val_loss += loss.item()
-				metrics.add(logits.detach(), target.detach())
+				metrics.add(logits.detach(), masks)
 		
 		avg_val_loss = val_loss / len(val_loader)
 		epoch_metrics = metrics.get_metrics()
