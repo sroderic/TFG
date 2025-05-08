@@ -150,10 +150,10 @@ def get_dataset(df, data_folder):
 
 def get_images_folder(data_folder):
 	width = args.width
-	height = width * 0.75
+	height = int(width * 0.75)
 	return data_folder / 'images' / f'{height}x{width}'
 
 def get_masks_folder(data_folder):
 	width = args.width
-	height = width * 0.75
+	height = int(width * 0.75)
 	return data_folder / 'masks' / f'{height}x{width}'
