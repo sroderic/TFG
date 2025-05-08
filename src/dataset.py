@@ -1,15 +1,17 @@
+import args
 import torch
 from torchvision import transforms
 from torch.utils.data.dataset import Dataset
 from PIL import Image
 from tqdm import tqdm
+from utils import get_images_folder, get_masks_folder
 
 
 class HAM10000Dataset(Dataset):
 	def __init__(self, df, data_folder):
 		self.df = df
-		self.images_folder = data_folder / 'images'
-		self.masks_folder = data_folder / 'masks'
+		self.images_folder = get_images_folder(data_folder)
+		self.masks_folder = get_images_folder(data_folder)
 
 		self.image_transform = transforms.Compose([
 			# transforms.Resize(self.image_size),
@@ -25,13 +27,13 @@ class HAM10000Dataset(Dataset):
 			])
 
 		# To test
-		# images = []
-		# masks = []
-		# for _, row in tqdm(df.iterrows(), total=len(df), desc="Preloading dataset to memory"):
-		# 	image_id = row['image_id']
-		# 	image, mask = self.__transform__(image_id)
-		# 	images.append(image)
-		# 	masks.append(mask)  # shape: (H, W) instead of (1, H, W)
+		images = []
+		masks = []
+		for _, row in tqdm(df.iterrows(), total=len(df), desc="Preloading dataset to memory"):
+			image_id = row['image_id']
+			image, mask = self.__transform__(image_id)
+			images.append(image.to(args.device))
+			masks.append(mask.to(args.device))  # shape: (H, W) instead of (1, H, W)
 		# self.images = torch.stack(images)
 		# self.masks = torch.stack(masks) 
 		# end test
@@ -41,7 +43,7 @@ class HAM10000Dataset(Dataset):
 	
 	def __getitem__(self, idx):
 		# To test
-		# return self.images[idx], self.masks[idx]
+		return self.images[idx], self.masks[idx]
 		# end test
 		image_id = self.df.iloc[idx]['image_id']
 		return self.__transform__(image_id)

@@ -20,7 +20,7 @@ def set_arguments():
 	parser.add_argument('--features', type=int, required=True)
 	# parser.add_argument('--name', type=str, required=True)
 	# parser.add_argument('--redux', type=int, required=True, help='UNet channels reduction rate 2**n')
-	# parser.add_argument('--width', type=int, required=True, help='512 for 512x384, 384 for 384x288, 256 for 256x192')
+	parser.add_argument('--width', type=int, required=True, help='512 for 512x384, 384 for 384x288, 256 for 256x192')
 	parser.add_argument('--epochs', type=int, default=20)
 	parser.add_argument('--batch_size', type=int, default=32)
 	parser.add_argument('--learning_rate' , '-lr', type=float, required=True)
@@ -32,6 +32,7 @@ def set_arguments():
 	args.colab = parsed.colab
 	args.seed = parsed.seed
 	args.features = parsed.features
+	args.width = parsed.width
 	args.epochs = parsed.epochs
 	args.batch_size = parsed.batch_size
 	args.learning_rate= parsed.learning_rate
@@ -146,3 +147,13 @@ def get_dataset(df, data_folder):
 
 	dataset = TensorDataset(images, masks)
 	return dataset
+
+def get_images_folder(data_folder):
+	width = args.width
+	height = width * 0.75
+	return data_folder / 'images' / f'{height}x{width}'
+
+def get_masks_folder(data_folder):
+	width = args.width
+	height = width * 0.75
+	return data_folder / 'masks' / f'{height}x{width}'

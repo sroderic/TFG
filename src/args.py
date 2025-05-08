@@ -2,6 +2,7 @@
 colab = None
 seed = None
 features = None
+width = None
 epochs = None
 batch_size = None
 learning_rate = None
