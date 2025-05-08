@@ -11,8 +11,9 @@ class HAM10000Dataset(Dataset):
 	def __init__(self, df, data_folder):
 		self.df = df
 		self.images_folder = get_images_folder(data_folder)
-		self.masks_folder = get_images_folder(data_folder)
-
+		self.masks_folder = get_masks_folder(data_folder)
+		self.images = []
+		self.masks = []
 		self.image_transform = transforms.Compose([
 			# transforms.Resize(self.image_size),
 			transforms.ToTensor(),
@@ -27,13 +28,12 @@ class HAM10000Dataset(Dataset):
 			])
 
 		# To test
-		images = []
-		masks = []
+
 		for _, row in tqdm(df.iterrows(), total=len(df), desc="Preloading dataset to memory"):
 			image_id = row['image_id']
 			image, mask = self.__transform__(image_id)
-			images.append(image.to(args.device))
-			masks.append(mask.to(args.device))  # shape: (H, W) instead of (1, H, W)
+			self.images.append(image.to(args.device))
+			self.masks.append(mask.to(args.device))  # shape: (H, W) instead of (1, H, W)
 		# self.images = torch.stack(images)
 		# self.masks = torch.stack(masks) 
 		# end test
