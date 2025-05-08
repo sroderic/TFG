@@ -65,7 +65,7 @@ if __name__ == "__main__":
 	val_dataset = get_dataset(df_val,
 		dataset_folder)
 	
-	del f, dataset_info, df_train, df_val
+	
 
 	'''
 	# Get datasets
@@ -78,6 +78,8 @@ if __name__ == "__main__":
 		dataset_folder,
 	)
 	'''
+
+	del f, dataset_info, df_train, df_val
 	# Get dataloaders
 	# num_workers = os.cpu_count() - 1
 	num_workers = 0

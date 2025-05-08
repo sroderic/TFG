@@ -110,8 +110,8 @@ def get_dataset_info(dataset_info_folder, seed):
 	}
 
 def get_dataset(df, data_folder):
-	images_folder = data_folder / 'images'
-	masks_folder = data_folder / 'masks'
+	images_folder = get_images_folder(data_folder)
+	masks_folder = get_masks_folder(data_folder)
 
 	image_transform = transforms.Compose([
 		transforms.ToTensor(),
