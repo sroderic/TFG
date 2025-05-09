@@ -72,7 +72,7 @@ def get_dataset_info(dataset_info_folder, seed):
 	# S'itera sobre totes les classes
 	for cls in classes:
 		# Es calcula el nombre d'imatges que falten per completar el 80% dessitjat al train dataset
-		missing = int(total_class_counts[cls] * (args.data_ratio / 10.) - train_class_counts[cls])
+		missing = int(total_class_counts[cls] * args.data_ratio *0.01 - train_class_counts[cls])
 
 		if missing > 0:
 			# Es filtren les imatges que perteneixen a la clase a df_val
