@@ -44,7 +44,7 @@ if __name__ == "__main__":
 
 	# Get dataset info
 	dataset_info_folder = args.save_folder / 'data' / 'ham10000'
-	dataset_info_file = dataset_info_folder/ f'dataset_info_{args.seed}.pkl'
+	dataset_info_file = dataset_info_folder/ f'dataset_info_{args.seed}_{args.data_ratio}.pkl'
 	if dataset_info_file.exists():
 		with open(dataset_info_file, 'rb') as f:
 			dataset_info = pickle.load(f)
@@ -59,14 +59,13 @@ if __name__ == "__main__":
 
 	dataset_folder = args.data_folder / 'sl'
 
+	# Get tensordatasets
 	train_dataset = get_dataset(df_train,
       dataset_folder)
 
 	val_dataset = get_dataset(df_val,
 		dataset_folder)
 	
-	
-
 	'''
 	# Get datasets
 	train_dataset = HAM10000Dataset(

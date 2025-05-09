@@ -8,6 +8,7 @@ from PIL import Image
 from tqdm import tqdm
 from torch.utils.data import TensorDataset
 
+
 def set_arguments():
 
 	''' Defines and parses the command-line arguments
@@ -17,6 +18,7 @@ def set_arguments():
 
 	parser.add_argument('--colab', action='store_true')
 	parser.add_argument('--seed', type=int, required=True)
+	parser.add_argument('--data_ratio', type=int, required=True)
 	parser.add_argument('--features', type=int, required=True)
 	# parser.add_argument('--name', type=str, required=True)
 	# parser.add_argument('--redux', type=int, required=True, help='UNet channels reduction rate 2**n')
@@ -31,6 +33,7 @@ def set_arguments():
 
 	args.colab = parsed.colab
 	args.seed = parsed.seed
+	args.data_ratio = parsed.data_ratio
 	args.features = parsed.features
 	args.width = parsed.width
 	args.epochs = parsed.epochs
@@ -69,7 +72,7 @@ def get_dataset_info(dataset_info_folder, seed):
 	# S'itera sobre totes les classes
 	for cls in classes:
 		# Es calcula el nombre d'imatges que falten per completar el 80% dessitjat al train dataset
-		missing = int(total_class_counts[cls] * 0.8 - train_class_counts[cls])
+		missing = int(total_class_counts[cls] * (args.data_ratio / 10.) - train_class_counts[cls])
 
 		if missing > 0:
 			# Es filtren les imatges que perteneixen a la clase a df_val

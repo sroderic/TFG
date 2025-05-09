@@ -9,6 +9,7 @@ learning_rate = None
 loss = None
 optimizer = None
 experiment = None
+train_ratio = None
 
 # Folders
 save_folder = None
