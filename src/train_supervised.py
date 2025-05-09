@@ -48,7 +48,7 @@ def train_model(model, train_loader, val_loader, criterion, optimizer, epochs, m
 	training_metrics = []
 	best_iou = 0.
 
-	experiment = f"{args.loss}-batch{args.batch_size}-lr{args.learning_rate}{f'-{args.experiment}' if args.experiment else ''}"
+	experiment = f"{args.data_ratio}_{args.loss}-batch{args.batch_size}-lr{args.learning_rate}{f'-{args.experiment}' if args.experiment else ''}"
 	writer = SummaryWriter(logs_folder / f"{experiment}")
 
 	start_training = time.time()
