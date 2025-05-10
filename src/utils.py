@@ -118,7 +118,7 @@ def get_dataset(df, data_folder):
 
 	image_transform = transforms.Compose([
 		transforms.ToTensor(),
-		# transforms.ConvertImageDtype(dtype= torch.bfloat16),
+		transforms.ConvertImageDtype(dtype= torch.bfloat16),
 		transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5])
 		])
 	

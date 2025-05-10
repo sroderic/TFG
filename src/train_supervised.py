@@ -8,10 +8,10 @@ import numpy as np
 
 from torch.utils.tensorboard import SummaryWriter
 
-def train_one_epoch(model, train_loader, criterion, optimizer, metrics):
+def train_one_epoch(model, train_loader, criterion, optimizer, scheduler, metrics):
 	running_loss = 0.
 	metrics.reset()
-	for images, masks in tqdm(train_loader, desc=f"Training"):
+	for images, masks in tqdm(train_loader, desc=f"Training - lr: {scheduler.get_last_lr()[0]}"):
 		with torch.autocast(device_type='cuda', dtype=torch.bfloat16):
 			# Forward propagation
 			logits = model(images) # [N, C, H, W]
@@ -28,12 +28,12 @@ def train_one_epoch(model, train_loader, criterion, optimizer, metrics):
 
 		# Add metrics to epoch
 		metrics.add(logits.detach(), masks)
-	
+	scheduler.step()
 	epoch_metrics = metrics.get_metrics()
 
 	return running_loss / len(train_loader), epoch_metrics
 
-def train_model(model, train_loader, val_loader, criterion, optimizer, epochs, metrics):
+def train_model(model, train_loader, val_loader, criterion, optimizer, scheduler, epochs, metrics):
 	checkpoints_base_folder = args.save_folder / 'checkpoints' / f'UNet{args.features}'
 	checkpoints_base_folder.mkdir(exist_ok=True)
 	checkpoints_folder = checkpoints_base_folder / f"{args.seed}"
@@ -57,7 +57,7 @@ def train_model(model, train_loader, val_loader, criterion, optimizer, epochs, m
 		
 		# Training
 		model.train()
-		avg_train_loss, epoch_metrics = train_one_epoch(model, train_loader, criterion, optimizer, metrics)
+		avg_train_loss, epoch_metrics = train_one_epoch(model, train_loader, criterion, optimizer, scheduler, metrics)
 
 		print(f"   🟢 Train Loss: {avg_train_loss:.4f} -- Elapsed: {datetime.timedelta(seconds=time.time()-start_training)}")
 		print(f"   🔵 IoU       : {np.nanmean(epoch_metrics['iou'][0:8]):4f}")

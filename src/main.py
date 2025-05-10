@@ -58,7 +58,7 @@ if __name__ == "__main__":
 	class_to_int = dataset_info['class_to_int']
 
 	dataset_folder = args.data_folder / 'sl'
-
+	'''
 	# Get tensordatasets
 	train_dataset = get_dataset(df_train,
       dataset_folder)
@@ -66,21 +66,7 @@ if __name__ == "__main__":
 	val_dataset = get_dataset(df_val,
 		dataset_folder)
 	
-	'''
-	# Get datasets
-	train_dataset = HAM10000Dataset(
-		df_train,
-		dataset_folder,
-	)
-	val_dataset = HAM10000Dataset(
-		df_val,
-		dataset_folder,
-	)
-	'''
-
-	del f, dataset_info, df_train, df_val
 	# Get dataloaders
-	# num_workers = os.cpu_count() - 1
 	num_workers = 0
 	train_loader = DataLoader(
 		train_dataset,
@@ -95,8 +81,37 @@ if __name__ == "__main__":
 		shuffle=False,
 		num_workers=num_workers,
 	)
+	
+	'''
+	# Get datasets
+	train_dataset = HAM10000Dataset(
+		df_train,
+		dataset_folder,
+	)
+	val_dataset = HAM10000Dataset(
+		df_val,
+		dataset_folder,
+	)
+	# Get dataloaders
+	num_workers = 4
+	train_loader = DataLoader(
+		train_dataset,
+		batch_size=args.batch_size,
+		shuffle=True,
+		num_workers=num_workers,
+		pin_memory=True
+	)
+	
+	val_loader = DataLoader(
+		val_dataset,
+		batch_size=args.batch_size,
+		shuffle=False,
+		num_workers=num_workers,
+	)
 
-
+	del f, dataset_info, df_train, df_val
+	
+	
 	# Get model
 	in_channels = 3
 	num_classes = len(class_to_int)
@@ -135,6 +150,7 @@ if __name__ == "__main__":
 	else:
 		print('Options: Adam, SGD')
 		exit()
+	scheduler = optim.lr_scheduler.ExponentialLR(optimizer, gamma=0.90)
 	metrics = Metrics(num_classes)
 
 	train_model(
@@ -143,6 +159,7 @@ if __name__ == "__main__":
 		val_loader= val_loader,
 		criterion= criterion,
 		optimizer= optimizer,
+		scheduler= scheduler,
 		epochs=args.epochs,
 		metrics=metrics
 	)
