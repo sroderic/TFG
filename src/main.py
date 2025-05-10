@@ -58,7 +58,7 @@ if __name__ == "__main__":
 	class_to_int = dataset_info['class_to_int']
 
 	dataset_folder = args.data_folder / 'sl'
-	'''
+
 	# Get tensordatasets
 	train_dataset = get_dataset(df_train,
       dataset_folder)
@@ -108,7 +108,7 @@ if __name__ == "__main__":
 		shuffle=False,
 		num_workers=num_workers,
 	)
-
+	'''
 	del f, dataset_info, df_train, df_val
 	
 	
