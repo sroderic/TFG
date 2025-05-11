@@ -11,7 +11,7 @@ from torch.utils.tensorboard import SummaryWriter
 def train_one_epoch(model, train_loader, criterion, optimizer, scheduler, metrics):
 	running_loss = 0.
 	metrics.reset()
-	for images, masks in tqdm(train_loader, desc=f"Training - lr: {scheduler.get_last_lr()[0]}"):
+	for images, masks in tqdm(train_loader, desc=f"Training - lr: {scheduler.get_last_lr()[0] if scheduler != None else args.learning_rate}"):
 		with torch.autocast(device_type='cuda', dtype=torch.bfloat16):
 			# Forward propagation
 			logits = model(images) # [N, C, H, W]
@@ -28,7 +28,8 @@ def train_one_epoch(model, train_loader, criterion, optimizer, scheduler, metric
 
 		# Add metrics to epoch
 		metrics.add(logits.detach(), masks)
-	scheduler.step()
+	if scheduler != None:
+		scheduler.step()
 	epoch_metrics = metrics.get_metrics()
 
 	return running_loss / len(train_loader), epoch_metrics

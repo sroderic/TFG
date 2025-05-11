@@ -144,13 +144,15 @@ if __name__ == "__main__":
 		exit()
 	
 	if args.optimizer == 'adam':
-		optimizer = optim.Adam(model.parameters(), lr=args.learning_rate)
+		optimizer = optim.Adam(model.parameters(), lr=args.learning_rate, weight_decay=0.5)
 	elif args.optimizer == 'sgd':
 		optimizer = optim.SGD(params=model.parameters(), lr=args.learning_rate, momentum=0.99)
 	else:
 		print('Options: Adam, SGD')
 		exit()
-	scheduler = optim.lr_scheduler.ExponentialLR(optimizer, gamma=0.90)
+	
+	# scheduler = optim.lr_scheduler.ExponentialLR(optimizer, gamma=0.90)
+	scheduler = None
 	metrics = Metrics(num_classes)
 
 	train_model(
