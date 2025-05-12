@@ -59,6 +59,7 @@ if __name__ == "__main__":
 
 	dataset_folder = args.data_folder / 'sl'
 
+	'''
 	# Get tensordatasets
 	train_dataset = get_dataset(df_train,
       dataset_folder)
@@ -66,6 +67,7 @@ if __name__ == "__main__":
 	val_dataset = get_dataset(df_val,
 		dataset_folder)
 	
+
 	# Get dataloaders
 	num_workers = 0
 	train_loader = DataLoader(
@@ -92,14 +94,15 @@ if __name__ == "__main__":
 		df_val,
 		dataset_folder,
 	)
+
 	# Get dataloaders
-	num_workers = 4
+	num_workers = 0
 	train_loader = DataLoader(
 		train_dataset,
 		batch_size=args.batch_size,
 		shuffle=True,
 		num_workers=num_workers,
-		pin_memory=True
+		# pin_memory=True
 	)
 	
 	val_loader = DataLoader(
@@ -108,7 +111,7 @@ if __name__ == "__main__":
 		shuffle=False,
 		num_workers=num_workers,
 	)
-	'''
+
 	del f, dataset_info, df_train, df_val
 	
 	

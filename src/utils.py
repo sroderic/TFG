@@ -55,7 +55,6 @@ def get_dataset_info(dataset_info_folder, seed):
 	classes = pd.unique(df['dx'])
 	
 	df_unique = df.groupby('lesion_id').sample(n=1, random_state=seed).reset_index(drop=True)
-	print(df_unique["dx"].value_counts(normalize=True))
 	df_train, df_val = train_test_split(
 		df_unique,
 		test_size=1 - (args.data_ratio * 0.01),
@@ -70,9 +69,6 @@ def get_dataset_info(dataset_info_folder, seed):
 
 	
 	int_to_class = {v: k for k, v in class_to_int.items()}
-	print(df_train["dx"].value_counts(normalize=True))
-	print(df_val["dx"].value_counts(normalize=True))
-	exit()
 	return {
 		"classes": classes,
 		"class_to_int": class_to_int,

@@ -5,6 +5,7 @@ from torch.utils.data.dataset import Dataset
 from PIL import Image
 from tqdm import tqdm
 from utils import get_images_folder, get_masks_folder
+import random
 
 
 class HAM10000Dataset(Dataset):
@@ -22,28 +23,37 @@ class HAM10000Dataset(Dataset):
 			# transforms.Normalize(mean=[0.7565, 0.5503, 0.5762],
 						# std=[0.1427, 0.1534, 0.1717])
 			])
+		
 		self.mask_transform = transforms.Compose([
 			# transforms.Resize(self.mask_size, interpolation=transforms.InterpolationMode.NEAREST),  # mantenim els valors discrets
 			transforms.PILToTensor()
 			])
-
+		
 		# To test
 
-		for _, row in tqdm(df.iterrows(), total=len(df), desc="Preloading dataset to memory"):
-			image_id = row['image_id']
-			image, mask = self.__transform__(image_id)
-			self.images.append(image.to(args.device))
-			self.masks.append(mask.to(args.device))  # shape: (H, W) instead of (1, H, W)
+		# for _, row in tqdm(df.iterrows(), total=len(df), desc="Preloading dataset to memory"):
+		# 	image_id = row['image_id']
+		# 	image, mask = self.__transform__(image_id)
+		# 	self.images.append(image.to(args.device))
+		# 	self.masks.append(mask.to(args.device))  # shape: (H, W) instead of (1, H, W)
+
+
 		# self.images = torch.stack(images)
 		# self.masks = torch.stack(masks) 
 		# end test
 
 	def __len__(self):
-		return len(self.df)		
+		return len(self.df)	* 3	
 	
 	def __getitem__(self, idx):
 		# To test
-		return self.images[idx], self.masks[idx]
+		if idx < len(self.df):
+			return idx
+			return self.images[idx], self.masks[idx]
+		else:
+			idx = idx % len(self.df)
+			return idx
+			return self.random_transform(self.images[idx], self.masks[idx])
 		# end test
 		image_id = self.df.iloc[idx]['image_id']
 		return self.__transform__(image_id)
@@ -58,3 +68,12 @@ class HAM10000Dataset(Dataset):
 		mask = self.mask_transform(mask)
 
 		return image, mask.squeeze(0)
+	
+	def random_transform(self, image, mask):
+		if random.random() > 0.5:
+			image = transforms.functional.hflip(image)
+			mask = transforms.functional.hflip(mask)
+		if random.random() > 0.5:
+			image = transforms.functional.vflip(image)
+			mask = transforms.functional.vflip(mask)
+		return image, mask
