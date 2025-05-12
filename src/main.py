@@ -144,7 +144,7 @@ if __name__ == "__main__":
 		exit()
 	
 	if args.optimizer == 'adam':
-		optimizer = optim.Adam(model.parameters(), lr=args.learning_rate, weight_decay=0.5)
+		optimizer = optim.Adam(model.parameters(), lr=args.learning_rate)
 	elif args.optimizer == 'sgd':
 		optimizer = optim.SGD(params=model.parameters(), lr=args.learning_rate, momentum=0.99)
 	else:
