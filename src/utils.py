@@ -7,6 +7,7 @@ from torch.utils.data.dataset import Dataset
 from PIL import Image
 from tqdm import tqdm
 from torch.utils.data import TensorDataset
+from sklearn.model_selection import train_test_split
 
 
 def set_arguments():
@@ -53,56 +54,25 @@ def get_dataset_info(dataset_info_folder, seed):
 	df = df.drop(columns=['dx_type', 'age', 'sex', 'localization', 'dataset'])
 	classes = pd.unique(df['dx'])
 	
-	# Comprobem el nombre d'observacions per classe
-	total_class_counts = df['dx'].value_counts()
-
-	# Es conta el nombre d'images que hi ha per pacient
-	image_counts = df['lesion_id'].value_counts()
-
-	# Es creen dos data frames: df_train y df_val
-	# Com que existeixen pacients amb més d'una imatge aquestes aniran tots a df_train
-	df_train = df[df['lesion_id'].isin(image_counts[image_counts > 1].index)]
-
-	# A df_val aniran, de moment, la resta d'imatges
-	df_val = df[df['lesion_id'].isin(image_counts[image_counts == 1].index)]
-
-	total_class_counts = df['dx'].value_counts()
-	train_class_counts = df_train['dx'].value_counts()
-
-	# S'itera sobre totes les classes
-	for cls in classes:
-		# Es calcula el nombre d'imatges que falten per completar el 80% dessitjat al train dataset
-		missing = int(total_class_counts[cls] * args.data_ratio *0.01 - train_class_counts[cls])
-
-		if missing > 0:
-			# Es filtren les imatges que perteneixen a la clase a df_val
-			temp_class_df = df_val[df_val['dx'] == cls]
-
-			# Si hi ha suficients imatges a df_val per completar el 80% a df_train
-			if len(temp_class_df) >= missing:
-				# Es seleccionen aleatoriament el nombre d'imatges calculades de df_val per moureles a df_train
-				selected_images = temp_class_df.sample(n=missing, random_state=seed)
-
-				# S'afegeixen les imatges al conjunt d'entrenament i s'eliminen del conjunt de validació
-				df_train = pd.concat([df_train, selected_images])
-				df_val = df_val.drop(selected_images.index)
-			else:
-				print(f"No hi ha suficients imatges per a completar la classe {cls}. Es necessiten: {missing}, disponibles: {len(temp_class_df)}")
-
-	# S'esborren les columnes no necessaries
-	df = df.drop(columns=['lesion_id'])
-	df_train = df_train.drop(columns=['lesion_id'])
-	df_train = df_train.reset_index(drop=True)
-	df_val = df_val.drop(columns=['lesion_id'])
-	df_val = df_val.reset_index(drop=True)
+	df_unique = df.groupby('lesion_id').sample(n=1, random_state=seed).reset_index(drop=True)
+	print(df_unique["dx"].value_counts(normalize=True))
+	df_train, df_val = train_test_split(
+		df_unique,
+		test_size=1 - (args.data_ratio * 0.01),
+		stratify=df_unique['dx'],
+		random_state=seed
+	)	
 
 	# Es crear un diccionari que asigna un valor numèric a cada classe de lesió
 	class_to_int = {'background': 0 }
 	for i, cls in enumerate(classes):
 		class_to_int[cls] = i + 1
 
+	
 	int_to_class = {v: k for k, v in class_to_int.items()}
-
+	print(df_train["dx"].value_counts(normalize=True))
+	print(df_val["dx"].value_counts(normalize=True))
+	exit()
 	return {
 		"classes": classes,
 		"class_to_int": class_to_int,

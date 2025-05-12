@@ -44,7 +44,7 @@ if __name__ == "__main__":
 
 	# Get dataset info
 	dataset_info_folder = args.save_folder / 'data' / 'ham10000'
-	dataset_info_file = dataset_info_folder/ f'dataset_info_{args.seed}_{args.data_ratio}.pkl'
+	dataset_info_file = dataset_info_folder/ f'dataset_info_{args.seed}_{args.data_ratio}_no_rep.pkl'
 	if dataset_info_file.exists():
 		with open(dataset_info_file, 'rb') as f:
 			dataset_info = pickle.load(f)
